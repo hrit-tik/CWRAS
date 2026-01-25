@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CW-RAS Dashboard</title>
+
+<style>
+body{
+    margin:0;
+    font-family:"Segoe UI",sans-serif;
+    background:radial-gradient(circle at top,#0b1e2d,#040b12);
+    color:#e8f1f8;
+}
+
+/* subtle fade-in */
+@keyframes fadeUp{
+    from{opacity:0; transform:translateY(12px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.container{
+    max-width:920px;
+    margin:50px auto;
+    padding:30px;
+    animation:fadeUp .6s ease;
+}
+
+h1{
+    text-align:center;
+    color:#45c7ff;
+    margin-bottom:6px;
+}
+
+.subtitle{
+    text-align:center;
+    font-size:14px;
+    color:#9fbcd3;
+    margin-bottom:40px;
+}
+
+.card{
+    background:linear-gradient(145deg,#0f2638,#0a1b2a);
+    border-radius:18px;
+    padding:26px;
+    margin-top:26px;
+    box-shadow:0 18px 45px rgba(0,0,0,0.45);
+    animation:fadeUp .5s ease;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.location-title{
+    font-size:22px;
+    font-weight:600;
+}
+
+.risk-type{
+    font-size:14px;
+    color:#9fbcd3;
+    margin-top:4px;
+}
+
+.risk-level{
+    font-size:16px;
+    font-weight:700;
+    padding:8px 16px;
+    border-radius:20px;
+}
+
+/* Overview strip */
+.overview{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:20px;
+}
+
+.overview-item{
+    background:linear-gradient(145deg,#0b2133,#081827);
+    border-radius:14px;
+    padding:18px;
+}
+
+.overview-item h4{
+    margin:0;
+    font-size:14px;
+    color:#9fbcd3;
+}
+
+.overview-item p{
+    margin:8px 0 0;
+    font-size:15px;
+    line-height:1.5;
+}
+
+/* metrics */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:24px;
+}
+
+.metric h3{
+    margin:0;
+    font-size:15px;
+    color:#7dd3a7;
+}
+
+.metric span{
+    font-size:28px;
+    font-weight:700;
+    display:block;
+    margin-top:6px;
+}
+
+.bar{
+    height:14px;
+    background:#1a3449;
+    border-radius:10px;
+    margin-top:10px;
+    overflow:hidden;
+}
+
+.fill{
+    height:100%;
+    border-radius:10px;
+    transition:width 1s ease;
+}
+
+.rain{background:linear-gradient(90deg,#4cc9f0,#56e0ff);}
+.ground{background:linear-gradient(90deg,#72efdd,#9bf6ff);}
+.land{background:linear-gradient(90deg,#80ed99,#b7f8c8);}
+
+.weights{
+    text-align:center;
+    font-size:13px;
+    color:#9fbcd3;
+}
+
+.explanation{
+    font-size:15px;
+    line-height:1.7;
+    color:#dce9f3;
+}
+
+.back{
+    text-align:center;
+    margin-top:38px;
+}
+
+.back a{
+    color:#45c7ff;
+    text-decoration:none;
+    font-size:14px;
+}
+.back a:hover{text-decoration:underline;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>CW-RAS Dashboard</h1>
+<div class="subtitle">Contextual Water Risk Assessment System</div>
+
+<!-- HEADER -->
+<div class="card header">
+    <div>
+        <div class="location-title">📍 {{ data.panchayat }}</div>
+        <div class="risk-type">{{ data.risk_type }}</div>
+    </div>
+
+    <div class="risk-level"
+        style="
+        background:
+        {% if data.level == 'Low' %}#064e3b
+        {% elif data.level == 'Moderate' %}#78350f
+        {% else %}#7f1d1d{% endif %};
+        color:
+        {% if data.level == 'Low' %}#4ade80
+        {% elif data.level == 'Moderate' %}#facc15
+        {% else %}#f87171{% endif %};
+        ">
+        {{ data.level }} Risk
+    </div>
+</div>
+
+<!-- QUICK OVERVIEW -->
+<div class="card overview">
+    <div class="overview-item">
+        <h4>🌧 Rainfall Characteristics</h4>
+        <p>
+            The assessed rainfall impact score for {{ data.panchayat }} is
+            <strong>{{ data.rainfall }}</strong>, indicating its contribution to the overall
+            {{ data.risk_type|lower }} profile.
+        </p>
+    </div>
+
+    <div class="overview-item">
+        <h4>💧 Groundwater Trends</h4>
+        <p>
+            Groundwater conditions show an impact score of
+            <strong>{{ data.groundwater }}</strong>, reflecting subsurface water level
+            behaviour in this region.
+        </p>
+    </div>
+
+    <div class="overview-item">
+        <h4>🌱 Land-use Pattern</h4>
+        <p>
+            Land-use characteristics contribute a score of
+            <strong>{{ data.landuse }}</strong>, accounting for settlement and surface
+            characteristics influencing risk.
+        </p>
+    </div>
+</div>
+
+<!-- METRICS -->
+<div class="card grid">
+    <div class="metric">
+        <h3>Overall Risk Score</h3>
+        <span>{{ data.score }}</span>
+    </div>
+
+    <div class="metric">
+        <h3>Rainfall Impact</h3>
+        <span>{{ data.rainfall }}</span>
+        <div class="bar">
+            <div class="fill rain" style="width: {{ data.rainfall * 10 }}%"></div>
+        </div>
+    </div>
+
+    <div class="metric">
+        <h3>Groundwater Impact</h3>
+        <span>{{ data.groundwater }}</span>
+        <div class="bar">
+            <div class="fill ground" style="width: {{ data.groundwater * 10 }}%"></div>
+        </div>
+    </div>
+
+    <div class="metric">
+        <h3>Land-use Impact</h3>
+        <span>{{ data.landuse }}</span>
+        <div class="bar">
+            <div class="fill land" style="width: {{ data.landuse * 10 }}%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card weights">
+    Weight Distribution: Rainfall (40%), Groundwater (40%), Land-use (20%)
+</div>
+
+<!-- EXPLANATION -->
+<div class="card">
+    <h3>Assessment Explanation</h3>
+    <p class="explanation">
+        {{ data.explanation }}
+    </p>
+</div>
+
+<div class="back">
+    <a href="/?panchayat={{ data.panchayat }}&risk={{ 'flood' if data.risk_type == 'Flood Risk' else 'scarcity' }}">
+        ← Assess another location
+    </a>
+</div>
+
+</div>
+</body>
+</html>
