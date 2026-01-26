@@ -11,9 +11,9 @@ panchayat_list = sorted(risk_data["Panchayat"].unique().tolist())
 
 
 def classify_level(score):
-    if score < 30:
+    if score < 15:
         return "Low"
-    elif score < 60:
+    elif score < 25:
         return "Moderate"
     else:
         return "High"
