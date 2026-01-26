@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import numpy as np
+import requests
+import math
 
 app = Flask(__name__)
 
-# Load dataset (CSV in same folder as app.py)
+# Load datasets
 risk_data = pd.read_csv("CW_RAS_master_dataset.csv")
+location_data = pd.read_csv("panchayat_locations.csv")
 
 panchayat_list = sorted(risk_data["Panchayat"].unique().tolist())
 
@@ -19,22 +22,79 @@ def classify_level(score):
         return "High"
 
 
+# ---------- NEW: OSM Geocoding ----------
+def get_lat_long(place_name):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": place_name,
+        "format": "json",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "CW-RAS-App"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    data = response.json()
+
+    if len(data) == 0:
+        return None, None
+
+    return float(data[0]["lat"]), float(data[0]["lon"])
+
+
+# ---------- NEW: Haversine Distance ----------
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371  # Earth radius in km
+
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.asin(math.sqrt(a))
+
+    return R * c
+
+
+# ---------- NEW: Nearest Panchayat ----------
+def find_nearest_panchayat(lat, lon):
+    min_distance = float("inf")
+    nearest_panchayat = None
+
+    for _, row in location_data.iterrows():
+        dist = haversine_distance(
+            lat, lon,
+            row["Latitude"],
+            row["Longitude"]
+        )
+
+        if dist < min_distance:
+            min_distance = dist
+            nearest_panchayat = row["Panchayat"]
+
+    return nearest_panchayat
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
 
     if request.method == "GET":
-        return render_template(
-            "index.html",
-            panchayats=panchayat_list,
-            selected_panchayat=request.args.get("panchayat"),
-            selected_risk=request.args.get("risk")
-        )
+        return render_template("index.html")
 
     # ---------- POST LOGIC ----------
-    selected_panchayat = request.form["panchayat"]
+    user_place = request.form["panchayat"]
     risk_type = request.form["risk_type"]
 
-    row = risk_data[risk_data["Panchayat"] == selected_panchayat].iloc[0]
+    lat, lon = get_lat_long(user_place)
+
+    if lat is None or lon is None:
+        return render_template("index.html", error="Location not found. Please try another name.")
+
+    nearest_panchayat = find_nearest_panchayat(lat, lon)
+
+    row = risk_data[risk_data["Panchayat"] == nearest_panchayat].iloc[0]
 
     # ----- RAINFALL DEVIATION -----
     rainfall_dev = abs(row["R_normal"] - row["R_current"]) / row["R_normal"] * 100
@@ -77,7 +137,7 @@ def index():
         explanation = "Land-use characteristics such as urbanization influence the assessed risk in this region."
 
     dashboard_data = {
-        "panchayat": selected_panchayat,
+        "panchayat": user_place,
         "risk_type": risk_label,
         "score": round(score, 2),
         "level": level,
@@ -90,7 +150,7 @@ def index():
     return render_template(
         "dashboard.html",
         data=dashboard_data,
-        selected_panchayat=selected_panchayat,
+        selected_panchayat=user_place,
         selected_risk=risk_type
     )
 
