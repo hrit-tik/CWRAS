@@ -12,14 +12,13 @@ body{
     color:#e8f1f8;
 }
 
-/* subtle fade-in */
 @keyframes fadeUp{
     from{opacity:0; transform:translateY(12px);}
     to{opacity:1; transform:translateY(0);}
 }
 
 .container{
-    max-width:920px;
+    max-width:1000px;
     margin:50px auto;
     padding:30px;
     animation:fadeUp .6s ease;
@@ -40,18 +39,17 @@ h1{
 
 .card{
     background:linear-gradient(145deg,#0f2638,#0a1b2a);
-    border-radius:18px;
+    border-radius:20px;
     padding:26px;
     margin-top:26px;
     box-shadow:0 18px 45px rgba(0,0,0,0.45);
-    animation:fadeUp .5s ease;
 }
 
+/* HEADER */
 .header{
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
-    gap:20px;
+    align-items:center;
     flex-wrap:wrap;
 }
 
@@ -63,27 +61,26 @@ h1{
 .risk-type{
     font-size:14px;
     color:#9fbcd3;
-    margin-top:4px;
 }
 
 .risk-level{
     font-size:16px;
     font-weight:700;
-    padding:8px 16px;
+    padding:8px 18px;
     border-radius:20px;
 }
 
-/* Overview strip */
+/* OVERVIEW */
 .overview{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
     gap:20px;
 }
 
 .overview-item{
     background:linear-gradient(145deg,#0b2133,#081827);
-    border-radius:14px;
-    padding:18px;
+    border-radius:16px;
+    padding:20px;
 }
 
 .overview-item h4{
@@ -93,43 +90,54 @@ h1{
 }
 
 .overview-item p{
-    margin:8px 0 0;
-    font-size:15px;
-    line-height:1.5;
+    margin-top:10px;
+    font-size:14px;
+    line-height:1.6;
 }
 
-/* metrics */
-.grid{
+/* METRICS */
+.metrics{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    grid-template-columns:repeat(2,1fr);
     gap:24px;
+}
+
+.metric{
+    background:linear-gradient(145deg,#0b2133,#081827);
+    border-radius:16px;
+    padding:22px;
 }
 
 .metric h3{
     margin:0;
-    font-size:15px;
+    font-size:14px;
     color:#7dd3a7;
 }
 
-.metric span{
-    font-size:28px;
+.metric .value{
+    font-size:30px;
     font-weight:700;
-    display:block;
-    margin-top:6px;
+    margin-top:10px;
+}
+
+.metric .details{
+    margin-top:10px;
+    font-size:13px;
+    color:#9fbcd3;
+    line-height:1.5;
 }
 
 .bar{
     height:14px;
     background:#1a3449;
     border-radius:10px;
-    margin-top:10px;
+    margin-top:12px;
     overflow:hidden;
 }
 
 .fill{
     height:100%;
     border-radius:10px;
-    transition:width 1s ease;
 }
 
 .rain{background:linear-gradient(90deg,#4cc9f0,#56e0ff);}
@@ -140,6 +148,7 @@ h1{
     text-align:center;
     font-size:13px;
     color:#9fbcd3;
+    margin-top:16px;
 }
 
 .explanation{
@@ -156,9 +165,7 @@ h1{
 .back a{
     color:#45c7ff;
     text-decoration:none;
-    font-size:14px;
 }
-.back a:hover{text-decoration:underline;}
 </style>
 </head>
 
@@ -191,84 +198,81 @@ h1{
     </div>
 </div>
 
-<!-- QUICK OVERVIEW -->
+<!-- OVERVIEW WITH RAW DATA -->
 <div class="card overview">
     <div class="overview-item">
         <h4>🌧 Rainfall Characteristics</h4>
         <p>
-            The assessed rainfall impact score for {{ data.panchayat }} is
-            <strong>{{ data.rainfall }}</strong>, indicating its contribution to the overall
-            {{ data.risk_type|lower }} profile.
+            Normal: <strong>{{ data.rainfall_normal }} mm</strong><br>
+            Current: <strong>{{ data.rainfall_current }} mm</strong><br>
+            Deviation: <strong>{{ data.rainfall_deviation }} %</strong>
         </p>
     </div>
 
     <div class="overview-item">
         <h4>💧 Groundwater Trends</h4>
         <p>
-            Groundwater conditions show an impact score of
-            <strong>{{ data.groundwater }}</strong>, reflecting subsurface water level
-            behaviour in this region.
+            Previous: <strong>{{ data.gw_last }}</strong><br>
+            Current: <strong>{{ data.gw_current }}</strong><br>
+            Change: <strong>{{ data.gw_change }}</strong>
         </p>
     </div>
 
     <div class="overview-item">
-        <h4>🌱 Land-use Pattern</h4>
+        <h4>🌱 Land-use Profile</h4>
         <p>
-            Land-use characteristics contribute a score of
-            <strong>{{ data.landuse }}</strong>, accounting for settlement and surface
-            characteristics influencing risk.
+            Urban: <strong>{{ data.urban_percent }} %</strong><br>
+            Forest: <strong>{{ data.forest_percent }} %</strong><br>
+            Type: <strong>{{ data.landuse_type }}</strong>
         </p>
     </div>
 </div>
 
-<!-- METRICS -->
-<div class="card grid">
-    <div class="metric">
-        <h3>Overall Risk Score</h3>
-        <span>{{ data.score }}</span>
-    </div>
+<!-- METRICS (SYMMETRIC) -->
+<div class="card">
+    <div class="metrics">
+        <div class="metric">
+            <h3>Overall Risk Score</h3>
+            <div class="value">{{ data.score }}</div>
+        </div>
 
-    <div class="metric">
-        <h3>Rainfall Impact</h3>
-        <span>{{ data.rainfall }}</span>
-        <div class="bar">
-            <div class="fill rain" style="width: {{ data.rainfall * 10 }}%"></div>
+        <div class="metric">
+            <h3>Rainfall Impact</h3>
+            <div class="value">{{ data.rainfall }}</div>
+            <div class="bar"><div class="fill rain" style="width: {{ data.rainfall * 10 }}%"></div></div>
+        </div>
+
+        <div class="metric">
+            <h3>Groundwater Impact</h3>
+            <div class="value">{{ data.groundwater }}</div>
+            <div class="bar"><div class="fill ground" style="width: {{ data.groundwater * 10 }}%"></div></div>
+        </div>
+
+        <div class="metric">
+            <h3>Land-use Impact</h3>
+            <div class="value">{{ data.landuse }}</div>
+            <div class="bar"><div class="fill land" style="width: {{ data.landuse * 10 }}%"></div></div>
         </div>
     </div>
 
-    <div class="metric">
-        <h3>Groundwater Impact</h3>
-        <span>{{ data.groundwater }}</span>
-        <div class="bar">
-            <div class="fill ground" style="width: {{ data.groundwater * 10 }}%"></div>
-        </div>
+    <div class="weights">
+        Weight Distribution: Rainfall (40%), Groundwater (40%), Land-use (20%)
     </div>
-
-    <div class="metric">
-        <h3>Land-use Impact</h3>
-        <span>{{ data.landuse }}</span>
-        <div class="bar">
-            <div class="fill land" style="width: {{ data.landuse * 10 }}%"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card weights">
-    Weight Distribution: Rainfall (40%), Groundwater (40%), Land-use (20%)
 </div>
 
 <!-- EXPLANATION -->
 <div class="card">
     <h3>Assessment Explanation</h3>
     <p class="explanation">
+        Based on the combined evaluation of rainfall deviation, groundwater fluctuation,
+        and land-use characteristics at the panchayat level, the assessed location exhibits
+        a <strong>{{ data.level|lower }}</strong> water-related risk profile.
         {{ data.explanation }}
     </p>
 </div>
 
 <div class="back">
-    <a href="/?panchayat={{ data.panchayat }}&risk={{ 'flood' if data.risk_type == 'Flood Risk' else 'scarcity' }}">
-        ← Assess another location
-    </a>
+    <a href="/">← Assess another location</a>
 </div>
 
 </div>

@@ -22,7 +22,7 @@ def classify_level(score):
         return "High"
 
 
-# ---------- NEW: OSM Geocoding ----------
+# ---------- OSM Geocoding ----------
 def get_lat_long(place_name):
     url = "https://nominatim.openstreetmap.org/search"
     params = {
@@ -43,7 +43,7 @@ def get_lat_long(place_name):
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
-# ---------- NEW: Haversine Distance ----------
+# ---------- Haversine Distance ----------
 def haversine_distance(lat1, lon1, lat2, lon2):
     R = 6371  # Earth radius in km
 
@@ -58,7 +58,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-# ---------- NEW: Nearest Panchayat ----------
+# ---------- Nearest Panchayat ----------
 def find_nearest_panchayat(lat, lon):
     min_distance = float("inf")
     nearest_panchayat = None
@@ -99,16 +99,37 @@ def index():
     # ----- RAINFALL DEVIATION -----
     rainfall_dev = abs(row["R_normal"] - row["R_current"]) / row["R_normal"] * 100
 
+    # --- NEW (RAW RAINFALL DATA) ---
+    rainfall_normal = round(row["R_normal"], 2)
+    rainfall_current = round(row["R_current"], 2)
+    rainfall_deviation = round(rainfall_dev, 2)
+
     # ----- GROUNDWATER DEVIATION -----
     if pd.notna(row["GW_last"]) and pd.notna(row["GW_current"]):
         gw_dev = abs(row["GW_last"] - row["GW_current"]) * 10
     else:
         gw_dev = 0
 
+    # --- NEW (RAW GROUNDWATER DATA) ---
+    gw_last = round(row["GW_last"], 2) if pd.notna(row["GW_last"]) else None
+    gw_current = round(row["GW_current"], 2) if pd.notna(row["GW_current"]) else None
+    gw_change = round(abs(gw_last - gw_current), 2) if gw_last is not None and gw_current is not None else None
+
     # ----- LAND USE -----
     urban = row["Urban_Percent"] if pd.notna(row["Urban_Percent"]) else 0
     forest = row["Forest_Percent"] if pd.notna(row["Forest_Percent"]) else 0
     landuse_score = urban - (forest * 0.5)
+
+    # --- NEW (RAW LAND-USE DATA + CLASSIFICATION) ---
+    urban_percent = round(urban, 2)
+    forest_percent = round(forest, 2)
+
+    if urban_percent >= 50:
+        landuse_type = "Urban-dominant"
+    elif urban_percent >= 25:
+        landuse_type = "Semi-urban"
+    else:
+        landuse_type = "Rural / Forest-dominant"
 
     if risk_type == "flood":
         score = (0.4 * rainfall_dev) + (0.4 * landuse_score) + (0.2 * gw_dev)
@@ -144,7 +165,20 @@ def index():
         "rainfall": rainfall,
         "groundwater": groundwater,
         "landuse": landuse,
-        "explanation": explanation
+        "explanation": explanation,
+
+        # --- NEW RAW DATA (ADDITIVE ONLY) ---
+        "rainfall_normal": rainfall_normal,
+        "rainfall_current": rainfall_current,
+        "rainfall_deviation": rainfall_deviation,
+
+        "gw_last": gw_last,
+        "gw_current": gw_current,
+        "gw_change": gw_change,
+
+        "urban_percent": urban_percent,
+        "forest_percent": forest_percent,
+        "landuse_type": landuse_type
     }
 
     return render_template(
