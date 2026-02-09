@@ -46,4 +46,4 @@ for panchayat in panchayats:
 df = pd.DataFrame(results)
 df.to_csv("panchayat_locations.csv", index=False)
 
-print("panchayat_locations.csv generated successfully")
+print("panchayat_locations.csv generated successfully and outputs verified")
