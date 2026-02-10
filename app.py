@@ -99,7 +99,6 @@ def index():
     # ----- RAINFALL DEVIATION -----
     rainfall_dev = abs(row["R_normal"] - row["R_current"]) / row["R_normal"] * 100
 
-    # --- NEW (RAW RAINFALL DATA) ---
     rainfall_normal = round(row["R_normal"], 2)
     rainfall_current = round(row["R_current"], 2)
     rainfall_deviation = round(rainfall_dev, 2)
@@ -110,7 +109,6 @@ def index():
     else:
         gw_dev = 0
 
-    # --- NEW (RAW GROUNDWATER DATA) ---
     gw_last = round(row["GW_last"], 2) if pd.notna(row["GW_last"]) else None
     gw_current = round(row["GW_current"], 2) if pd.notna(row["GW_current"]) else None
     gw_change = round(abs(gw_last - gw_current), 2) if gw_last is not None and gw_current is not None else None
@@ -120,7 +118,6 @@ def index():
     forest = row["Forest_Percent"] if pd.notna(row["Forest_Percent"]) else 0
     landuse_score = urban - (forest * 0.5)
 
-    # --- NEW (RAW LAND-USE DATA + CLASSIFICATION) ---
     urban_percent = round(urban, 2)
     forest_percent = round(forest, 2)
 
@@ -149,7 +146,6 @@ def index():
 
     level = classify_level(score)
 
-    # ----- EXPLANATION -----
     if rainfall >= groundwater and rainfall >= landuse:
         explanation = "Rainfall variation is the dominant factor influencing the assessed risk in this region."
     elif groundwater >= landuse:
@@ -167,7 +163,6 @@ def index():
         "landuse": landuse,
         "explanation": explanation,
 
-        # --- NEW RAW DATA (ADDITIVE ONLY) ---
         "rainfall_normal": rainfall_normal,
         "rainfall_current": rainfall_current,
         "rainfall_deviation": rainfall_deviation,
@@ -187,6 +182,12 @@ def index():
         selected_panchayat=user_place,
         selected_risk=risk_type
     )
+
+
+# ---------- NEW ROUTE (DOCUMENTATION ONLY) ----------
+@app.route("/algorithm")
+def algorithm():
+    return render_template("algorithm.html")
 
 
 if __name__ == "__main__":

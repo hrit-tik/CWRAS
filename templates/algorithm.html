@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SR-SA v2 Algorithm | CW-RAS</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #0b1e2d, #040b12);
+        color: #e8f1f8;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+        max-width: 980px;
+        margin: 60px auto;
+        padding: 40px;
+        animation: fadeUp 0.6s ease;
+    }
+
+    h1 {
+        text-align: center;
+        color: #45c7ff;
+        margin-bottom: 6px;
+        letter-spacing: 1px;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #9fbcd3;
+        margin-bottom: 46px;
+    }
+
+    .card {
+        background: linear-gradient(145deg, #0f2638, #0a1b2a);
+        border-radius: 22px;
+        padding: 30px;
+        margin-bottom: 28px;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+    }
+
+    h2 {
+        color: #4ade80;
+        font-size: 18px;
+        margin-bottom: 14px;
+    }
+
+    p {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #dce9f3;
+    }
+
+    .equation {
+        margin: 18px 0;
+        padding: 14px 18px;
+        background: rgba(11,33,51,0.85);
+        border-left: 4px solid #45c7ff;
+        border-radius: 12px;
+        font-family: "Consolas", monospace;
+        font-size: 14px;
+        color: #c7e9ff;
+    }
+
+    .flow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+        gap: 18px;
+        margin-top: 20px;
+    }
+
+    .flow-box {
+        background: linear-gradient(145deg, #0b2133, #081827);
+        padding: 18px;
+        border-radius: 16px;
+        text-align: center;
+        font-size: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        animation: fadeUp 0.8s ease;
+    }
+
+    .flow-box span {
+        display: block;
+        margin-top: 6px;
+        color: #9fbcd3;
+        font-size: 13px;
+    }
+
+    .back {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .back a {
+        color: #45c7ff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>SR-SA v2 Algorithm</h1>
+<div class="subtitle">Simplified Risk–Score Aggregation · Contextual Water Risk Assessment</div>
+
+<!-- OVERVIEW -->
+<div class="card">
+    <h2>1. Algorithm Overview</h2>
+    <p>
+        SR-SA v2 (Simplified Risk–Score Aggregation, Version 2) is a deterministic,
+        multi-parameter evaluation algorithm designed to assess water-related risks
+        at the panchayat level. The algorithm integrates hydrological variability
+        and land-use characteristics into a single composite risk score.
+    </p>
+    <p>
+        Instead of relying on prediction models, SR-SA v2 focuses on
+        <strong>observed deviations</strong>, ensuring interpretability,
+        transparency, and academic defensibility.
+    </p>
+</div>
+
+<!-- PARAMETERS -->
+<div class="card">
+    <h2>2. Input Parameters</h2>
+
+    <div class="flow">
+        <div class="flow-box">
+            🌧 Rainfall
+            <span>Current vs Normal Deviation</span>
+        </div>
+        <div class="flow-box">
+            💧 Groundwater
+            <span>Change in Water Table</span>
+        </div>
+        <div class="flow-box">
+            🌱 Land-use
+            <span>Urban & Forest Cover</span>
+        </div>
+    </div>
+</div>
+
+<!-- RAINFALL -->
+<div class="card">
+    <h2>3. Rainfall Deviation Calculation</h2>
+    <p>
+        Rainfall impact is computed using the percentage deviation between
+        long-term normal rainfall and the current observed rainfall.
+        This captures abnormal excess or deficit conditions.
+    </p>
+
+    <div class="equation">
+        Rainfall Deviation (%) =
+        | R<sub>normal</sub> − R<sub>current</sub> |
+        / R<sub>normal</sub> × 100
+    </div>
+
+    <p>
+        This normalized representation allows rainfall variability
+        to be compared uniformly across regions.
+    </p>
+</div>
+
+<!-- GROUNDWATER -->
+<div class="card">
+    <h2>4. Groundwater Fluctuation Assessment</h2>
+    <p>
+        Groundwater stress is evaluated using the absolute change
+        between previous and current groundwater levels.
+    </p>
+
+    <div class="equation">
+        Groundwater Change =
+        | GW<sub>last</sub> − GW<sub>current</sub> |
+    </div>
+
+    <p>
+        Larger fluctuations indicate increased vulnerability,
+        particularly in water scarcity scenarios.
+    </p>
+</div>
+
+<!-- LAND USE -->
+<div class="card">
+    <h2>5. Land-use Influence</h2>
+    <p>
+        Land-use characteristics affect both surface runoff and
+        groundwater recharge. Urban areas tend to increase runoff,
+        while forest cover improves infiltration.
+    </p>
+
+    <div class="equation">
+        Land-use Score = Urban% − ( Forest% × 0.5 )
+    </div>
+</div>
+
+<!-- RISK AGGREGATION -->
+<div class="card">
+    <h2>6. Risk Score Aggregation</h2>
+    <p>
+        SR-SA v2 uses weighted aggregation, where parameter importance
+        varies depending on the selected risk model.
+    </p>
+
+    <div class="equation">
+        Flood Risk Score =
+        0.4 × Rainfall +
+        0.4 × Land-use +
+        0.2 × Groundwater
+    </div>
+
+    <div class="equation">
+        Water Scarcity Risk Score =
+        0.4 × Rainfall +
+        0.4 × Groundwater +
+        0.2 × Land-use
+    </div>
+</div>
+
+<!-- CLASSIFICATION -->
+<div class="card">
+    <h2>7. Risk Level Classification</h2>
+    <p>
+        The final composite score is mapped to qualitative
+        risk levels to support interpretability.
+    </p>
+
+    <div class="equation">
+        Score &lt; 15 → Low Risk<br>
+        15 ≤ Score &lt; 25 → Moderate Risk<br>
+        Score ≥ 25 → High Risk
+    </div>
+</div>
+
+<!-- CONCLUSION -->
+<div class="card">
+    <h2>8. Key Characteristics of SR-SA v2</h2>
+    <p>
+        • Transparent scoring logic<br>
+        • Context-aware parameter weighting<br>
+        • Computationally lightweight<br>
+        • Scaled down version of the vast scope of the project.
+    </p>
+</div>
+
+<div class="back">
+    <a href="index.html">← Back to Risk Assessment</a>
+</div>
+
+</div>
+</body>
+</html>
