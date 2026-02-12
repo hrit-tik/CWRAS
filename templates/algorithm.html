@@ -116,7 +116,7 @@
 
 <!-- OVERVIEW -->
 <div class="card">
-    <h2>1. Algorithm Overview</h2>
+    <h2>Algorithm Overview</h2>
     <p>
         SR-SA v2 (Simplified Risk–Score Aggregation, Version 2) is a deterministic,
         multi-parameter evaluation algorithm designed to assess water-related risks
@@ -132,7 +132,7 @@
 
 <!-- PARAMETERS -->
 <div class="card">
-    <h2>2. Input Parameters</h2>
+    <h2>Input Parameters</h2>
 
     <div class="flow">
         <div class="flow-box">
@@ -152,7 +152,7 @@
 
 <!-- RAINFALL -->
 <div class="card">
-    <h2>3. Rainfall Deviation Calculation</h2>
+    <h2>Rainfall Deviation Calculation</h2>
     <p>
         Rainfall impact is computed using the percentage deviation between
         long-term normal rainfall and the current observed rainfall.
@@ -173,7 +173,7 @@
 
 <!-- GROUNDWATER -->
 <div class="card">
-    <h2>4. Groundwater Fluctuation Assessment</h2>
+    <h2>Groundwater Fluctuation Assessment</h2>
     <p>
         Groundwater stress is evaluated using the absolute change
         between previous and current groundwater levels.
@@ -192,7 +192,7 @@
 
 <!-- LAND USE -->
 <div class="card">
-    <h2>5. Land-use Influence</h2>
+    <h2>Land-use Influence</h2>
     <p>
         Land-use characteristics affect both surface runoff and
         groundwater recharge. Urban areas tend to increase runoff,
@@ -206,7 +206,7 @@
 
 <!-- RISK AGGREGATION -->
 <div class="card">
-    <h2>6. Risk Score Aggregation</h2>
+    <h2>Risk Score Aggregation</h2>
     <p>
         SR-SA v2 uses weighted aggregation, where parameter importance
         varies depending on the selected risk model.
@@ -227,9 +227,34 @@
     </div>
 </div>
 
+
+<!-- WEIGHT DISTRIBUTION -->
+<div class="card">
+    <h2>Weight Distribution Visualization</h2>
+
+    <p><strong>Flood Model</strong></p>
+    <div style="background:#1a3449;height:16px;border-radius:10px;overflow:hidden;margin-bottom:8px;">
+        <div style="width:40%;background:#45c7ff;height:100%;float:left;"></div>
+        <div style="width:40%;background:#4ade80;height:100%;float:left;"></div>
+        <div style="width:20%;background:#facc15;height:100%;float:left;"></div>
+    </div>
+    <p style="font-size:13px;color:#9fbcd3;">Rainfall 40% · Land-use 40% · Groundwater 20%</p>
+
+    <br>
+
+    <p><strong>Water Scarcity Model</strong></p>
+    <div style="background:#1a3449;height:16px;border-radius:10px;overflow:hidden;margin-bottom:8px;">
+        <div style="width:40%;background:#45c7ff;height:100%;float:left;"></div>
+        <div style="width:40%;background:#facc15;height:100%;float:left;"></div>
+        <div style="width:20%;background:#4ade80;height:100%;float:left;"></div>
+    </div>
+    <p style="font-size:13px;color:#9fbcd3;">Rainfall 40% · Groundwater 40% · Land-use 20%</p>
+</div>
+
+
 <!-- CLASSIFICATION -->
 <div class="card">
-    <h2>7. Risk Level Classification</h2>
+    <h2>Risk Level Classification</h2>
     <p>
         The final composite score is mapped to qualitative
         risk levels to support interpretability.
@@ -242,9 +267,42 @@
     </div>
 </div>
 
+<!-- SAMPLE CALCULATION BREAKDOWN -->
+<div class="card">
+    <h2>Sample Score Breakdown</h2>
+
+    <p>Example Input Values:</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:16px;">
+        <div style="text-align:center;">
+            <div style="font-size:26px;color:#45c7ff;">18%</div>
+            <div style="font-size:13px;color:#9fbcd3;">Rainfall Deviation</div>
+        </div>
+
+        <div style="text-align:center;">
+            <div style="font-size:26px;color:#72efdd;">5</div>
+            <div style="font-size:13px;color:#9fbcd3;">Groundwater Change</div>
+        </div>
+
+        <div style="text-align:center;">
+            <div style="font-size:26px;color:#80ed99;">22</div>
+            <div style="font-size:13px;color:#9fbcd3;">Land-use Score</div>
+        </div>
+    </div>
+
+    <p style="margin-top:20px;">
+        Flood Risk Score =
+        (0.4 × 18) + (0.4 × 22) + (0.2 × 5)
+    </p>
+
+    <div class="equation">
+        = 7.2 + 8.8 + 1.0 = 17.0 → Moderate Risk
+    </div>
+</div>
+
 <!-- CONCLUSION -->
 <div class="card">
-    <h2>8. Key Characteristics of SR-SA v2</h2>
+    <h2>Key Characteristics of SR-SA v2</h2>
     <p>
         • Transparent scoring logic<br>
         • Context-aware parameter weighting<br>
