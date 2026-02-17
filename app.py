@@ -49,11 +49,11 @@ def normalize_landuse(urban_pct, forest_pct):
 
 def compute_swf(water_body_pct):
     """Surface Water Factor: moderates scarcity for lake-adjacent areas.
-    SWF = 1 - (Water_Body_Percent / 100) * 0.8
-    Range: [0.2, 1.0]. Applied only to scarcity, not flood."""
+    SWF = max(1.0 - (Water_Body_Percent / 50), 0.1)
+    Range: [0.1, 1.0]."""
     if pd.isna(water_body_pct) or water_body_pct <= 0:
         return 1.0
-    return max(1.0 - (water_body_pct / 100) * 0.8, 0.2)
+    return max(1.0 - (water_body_pct / 50), 0.1)
 
 
 # ---------- OSM Geocoding ----------
@@ -159,23 +159,42 @@ def index():
     else:
         landuse_type = "Rural / Forest-dominant"
 
-    # ----- SURFACE WATER FACTOR -----
+    # ----- SURFACE WATER FACTORS -----
     water_body_pct = row["Water_Body_Percent"] if "Water_Body_Percent" in row.index else 0
-    swf = compute_swf(water_body_pct)
+    swf = compute_swf(water_body_pct)  # For Scarcity
+    flood_boost = water_body_pct * 1.2  # For Flood
 
     # ----- WEIGHTED SCORING -----
     if risk_type == "flood":
+        # Flood: Only rising GW contributes (GW_current < GW_last means rise in water level / decrease in depth)
+        # Note: Datasets usually use mbgl (meters below ground level).
+        # gw_rise_score is calculated based on direction check.
+        # However, normalize_groundwater uses abs diff. We need direction.
+
+        is_rising = False
+        if pd.notna(gw_last) and pd.notna(gw_current):
+            # If current depth < last depth => Water level ROSE
+            if gw_current < gw_last:
+                is_rising = True
+
+        gw_flood_score = gw_score if is_rising else 0
+
         rainfall_impact = 0.4 * rain_score
         landuse_impact = 0.4 * lu_score
-        groundwater_impact = 0.2 * gw_score
-        score = rainfall_impact + landuse_impact + groundwater_impact
+        groundwater_impact = 0.2 * gw_flood_score
+        
+        base_score = rainfall_impact + landuse_impact + groundwater_impact
+        score = min(base_score + flood_boost, 100)
         risk_label = "Flood Risk"
+
     else:
+        # Scarcity: Absolute fluctuation contributes (instability)
         rainfall_impact = 0.4 * rain_score
         groundwater_impact = 0.4 * gw_score
         landuse_impact = 0.2 * lu_score
+        
         raw_score = rainfall_impact + groundwater_impact + landuse_impact
-        score = raw_score * swf  # Surface water moderation
+        score = raw_score * swf
         risk_label = "Water Scarcity Risk"
 
     rainfall = round(rainfall_impact, 2)
@@ -214,7 +233,8 @@ def index():
         "landuse_type": landuse_type,
 
         "water_body_pct": round(water_body_pct, 1) if water_body_pct else 0,
-        "swf": round(swf, 2)
+        "swf": round(swf, 2),
+        "flood_boost": round(flood_boost, 1)
     }
 
     return render_template(

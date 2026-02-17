@@ -48,7 +48,7 @@ def compute_swf(water_body_pct):
     """Surface Water Factor: moderates scarcity for lake-adjacent areas."""
     if pd.isna(water_body_pct) or water_body_pct <= 0:
         return 1.0
-    return max(1.0 - (water_body_pct / 100) * 0.8, 0.2)
+    return max(1.0 - (water_body_pct / 50), 0.1)
 
 
 # -----------------------------
@@ -74,13 +74,33 @@ df["L_score"] = df.apply(
 # STEP 2: WEIGHTED RISK SCORES
 # -----------------------------
 
-# Flood:    0.4×Rainfall + 0.4×Land-use + 0.2×Groundwater
-df["FloodRisk"] = (
-    0.4 * df["R_score"] +
-    0.4 * df["L_score"] +
-    0.2 * df["G_score"]
+# ----- FLOOD RISK -----
+# Only rising groundwater contributes to flood risk.
+# GW (mbgl): Lower value = Higher water table.
+# Rise = GW_current < GW_last
+df["G_Flood_Score"] = df.apply(
+    lambda row: row["G_score"] if (
+        pd.notna(row["GW_current"]) and pd.notna(row["GW_last"]) and
+        row["GW_current"] < row["GW_last"]
+    ) else 0,
+    axis=1
 )
 
+# Flood Boost: Lake proximity increases flood risk
+# Boost = Water_Body_Percent * 1.2
+df["FloodBoost"] = df["Water_Body_Percent"].fillna(0) * 1.2
+
+df["FloodRisk_Base"] = (
+    0.4 * df["R_score"] +
+    0.4 * df["L_score"] +
+    0.2 * df["G_Flood_Score"]
+)
+
+# Final Flood Score = min(Base + Boost, 100)
+df["FloodRisk"] = (df["FloodRisk_Base"] + df["FloodBoost"]).clip(upper=100)
+
+
+# ----- SCARCITY RISK -----
 # Scarcity: 0.4*Rainfall + 0.4*Groundwater + 0.2*Land-use, moderated by SWF
 df["SWF"] = df["Water_Body_Percent"].apply(compute_swf) if "Water_Body_Percent" in df.columns else 1.0
 

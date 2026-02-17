@@ -522,15 +522,16 @@
             </p>
             <div class="equation">
                 Flood Risk Score =
-                0.4 × Rainfall +
-                0.4 × Land-use +
-                0.2 × Groundwater
+                min( (0.4×R + 0.4×L + 0.2×G_rise) + Flood_Boost, 100 )
             </div>
+            <p style="font-size: 0.9em; margin-top: 5px;">
+                <strong>G_rise:</strong> Only counts if groundwater level rose (depth decreased).<br>
+                <strong>Flood_Boost:</strong> Water_Body% × 1.2 (Lake proximity increases risk).
+            </p>
+
             <div class="equation">
                 Water Scarcity Risk Score =<br>
-                ( 0.4 × Rainfall +
-                0.4 × Groundwater +
-                0.2 × Land-use ) × SWF
+                ( 0.4×R + 0.4×G_fluct + 0.2×L ) × SWF
             </div>
         </div>
 
@@ -539,19 +540,15 @@
             <h2>Surface Water Moderation Factor</h2>
             <p>
                 Panchayats adjacent to significant water bodies (lakes,
-                backwaters, reservoirs) have reduced water scarcity risk.
-                The Surface Water Factor (SWF) moderates scarcity scores
-                while leaving flood risk unchanged.
+                backwaters, reservoirs) have markedly reduced water scarcity risk.
             </p>
             <div class="equation">
-                SWF = 1 − ( Water_Body% / 100 ) × 0.8<br>
-                Range: [ 0.2, 1.0 ]
+                SWF = max( 1.0 − ( Water_Body% / 50 ), 0.1 )<br>
+                Range: [ 0.1, 1.0 ]
             </div>
             <p>
-                A panchayat with no water body proximity (0%) has SWF = 1.0
-                (unaffected). One with 35% water body coverage has SWF = 0.72,
-                reducing scarcity by 28%. The floor of 0.2 ensures even
-                fully aquatic areas retain minimal scarcity sensitivity.
+                A panchayat with 35% water body coverage (e.g. Perumon) has SWF = 0.30,
+                reducing scarcity by 70%.
             </p>
         </div>
 
