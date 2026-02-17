@@ -1,280 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>CW-RAS Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CW-RAS Dashboard · {{ data.panchayat }}</title>
 
-<style>
-body{
-    margin:0;
-    font-family:"Segoe UI",sans-serif;
-    background:radial-gradient(circle at top,#0b1e2d,#040b12);
-    color:#e8f1f8;
-}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-@keyframes fadeUp{
-    from{opacity:0; transform:translateY(12px);}
-    to{opacity:1; transform:translateY(0);}
-}
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-.container{
-    max-width:1000px;
-    margin:50px auto;
-    padding:30px;
-    animation:fadeUp .6s ease;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060e18;
+            color: #e2edf8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-h1{
-    text-align:center;
-    color:#45c7ff;
-    margin-bottom:6px;
-}
+        /* ===== BACKGROUND BLOBS ===== */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: .14;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-.subtitle{
-    text-align:center;
-    font-size:14px;
-    color:#9fbcd3;
-    margin-bottom:40px;
-}
+        body::before {
+            width: 650px;
+            height: 650px;
+            background: #3b82f6;
+            top: -200px;
+            left: -150px;
+            animation: blobDrift 20s ease-in-out infinite alternate;
+        }
 
-.card{
-    background:linear-gradient(145deg,#0f2638,#0a1b2a);
-    border-radius:20px;
-    padding:26px;
-    margin-top:26px;
-    box-shadow:0 18px 45px rgba(0,0,0,0.45);
-}
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: #06b6d4;
+            bottom: -180px;
+            right: -120px;
+            animation: blobDrift 24s ease-in-out infinite alternate-reverse;
+        }
 
-/* HEADER */
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-}
+        @keyframes blobDrift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
 
-.location-title{
-    font-size:22px;
-    font-weight:600;
-}
+            50% {
+                transform: translate(50px, 30px) scale(1.1);
+            }
 
-.risk-type{
-    font-size:14px;
-    color:#9fbcd3;
-}
+            100% {
+                transform: translate(-30px, 15px) scale(.94);
+            }
+        }
 
-.risk-level{
-    font-size:16px;
-    font-weight:700;
-    padding:8px 18px;
-    border-radius:20px;
-}
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(22px);
+            }
 
-/* OVERVIEW */
-.overview{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:20px;
-}
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-.overview-item{
-    background:linear-gradient(145deg,#0b2133,#081827);
-    border-radius:16px;
-    padding:20px;
-}
+        @keyframes barFill {
+            from {
+                width: 0;
+            }
+        }
 
-.overview-item h4{
-    margin:0;
-    font-size:14px;
-    color:#9fbcd3;
-}
+        @keyframes barShine {
+            0% {
+                left: -40%;
+            }
 
-.overview-item p{
-    margin-top:10px;
-    font-size:14px;
-    line-height:1.6;
-}
+            100% {
+                left: 140%;
+            }
+        }
 
-/* METRICS */
-.metrics{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:24px;
-}
+        @keyframes pulseGlow {
 
-.metric{
-    background:linear-gradient(145deg,#0b2133,#081827);
-    border-radius:16px;
-    padding:22px;
-}
+            0%,
+            100% {
+                box-shadow: 0 0 8px currentColor;
+            }
 
-.metric h3{
-    margin:0;
-    font-size:14px;
-    color:#7dd3a7;
-}
+            50% {
+                box-shadow: 0 0 20px currentColor;
+            }
+        }
 
-.metric .value{
-    font-size:30px;
-    font-weight:700;
-    margin-top:10px;
-}
+        /* ===== CONTAINER ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1020px;
+            margin: 50px auto;
+            padding: 30px;
+        }
 
-.metric .details{
-    margin-top:10px;
-    font-size:13px;
-    color:#9fbcd3;
-    line-height:1.5;
-}
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #60a5fa, #22d3ee, #4ade80);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+        }
 
-.bar{
-    height:14px;
-    background:#1a3449;
-    border-radius:10px;
-    margin-top:12px;
-    overflow:hidden;
-}
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #8eafc8;
+            margin-bottom: 44px;
+        }
 
-.fill{
-    height:100%;
-    border-radius:10px;
-}
+        /* ===== CARDS ===== */
+        .card {
+            background: rgba(12, 28, 46, .5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 22px;
+            padding: 28px;
+            margin-top: 26px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .4);
+            animation: fadeInUp .6s ease both;
+        }
 
-.rain{background:linear-gradient(90deg,#4cc9f0,#56e0ff);}
-.ground{background:linear-gradient(90deg,#72efdd,#9bf6ff);}
-.land{background:linear-gradient(90deg,#80ed99,#b7f8c8);}
+        .card:nth-child(2) {
+            animation-delay: .08s;
+        }
 
-.weights{
-    text-align:center;
-    font-size:13px;
-    color:#9fbcd3;
-    margin-top:16px;
-}
+        .card:nth-child(3) {
+            animation-delay: .16s;
+        }
 
-.explanation{
-    font-size:15px;
-    line-height:1.7;
-    color:#dce9f3;
-}
+        .card:nth-child(4) {
+            animation-delay: .24s;
+        }
 
-.back{
-    text-align:center;
-    margin-top:38px;
-}
+        .card:nth-child(5) {
+            animation-delay: .32s;
+        }
 
-.back a{
-    color:#45c7ff;
-    text-decoration:none;
-}
-</style>
+        /* ===== HEADER CARD ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .location-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .risk-type {
+            font-size: 14px;
+            color: #8eafc8;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ===== RISK BADGE ===== */
+        .risk-level {
+            font-size: 14px;
+            font-weight: 700;
+            padding: 10px 22px;
+            border-radius: 24px;
+            letter-spacing: .5px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
+
+        .risk-low {
+            background: rgba(6, 78, 59, .6);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, .25);
+        }
+
+        .risk-moderate {
+            background: rgba(120, 53, 15, .5);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, .25);
+        }
+
+        .risk-high {
+            background: rgba(127, 29, 29, .5);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, .25);
+        }
+
+        /* ===== OVERVIEW GRID ===== */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .overview-item {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 18px;
+            padding: 22px;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .overview-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .3);
+        }
+
+        .overview-item h4 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8eafc8;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 14px;
+        }
+
+        .overview-item p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #b0c9de;
+        }
+
+        .overview-item strong {
+            color: #e2edf8;
+        }
+
+        /* ===== METRICS GRID ===== */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 18px;
+            padding: 24px;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .metric:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .3);
+        }
+
+        .metric h3 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: #7dd3a7;
+        }
+
+        .metric .value {
+            font-size: 34px;
+            font-weight: 800;
+            margin-top: 10px;
+            letter-spacing: -.5px;
+        }
+
+        .metric .details {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #8eafc8;
+            line-height: 1.6;
+        }
+
+        /* ===== PROGRESS BARS ===== */
+        .bar {
+            height: 12px;
+            background: rgba(255, 255, 255, .06);
+            border-radius: 10px;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            border-radius: 10px;
+            position: relative;
+            animation: barFill 1.2s cubic-bezier(.4, 0, .2, 1) both;
+            overflow: hidden;
+        }
+
+        .fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -40%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .3), transparent);
+            animation: barShine 2s ease-in-out 1.2s infinite;
+        }
+
+        .rain {
+            background: linear-gradient(90deg, #3b82f6, #22d3ee);
+        }
+
+        .ground {
+            background: linear-gradient(90deg, #06b6d4, #34d399);
+        }
+
+        .land {
+            background: linear-gradient(90deg, #4ade80, #86efac);
+        }
+
+        /* ===== SCORE HIGHLIGHT ===== */
+        .score-value {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        /* ===== WEIGHTS ===== */
+        .weights {
+            text-align: center;
+            font-size: 13px;
+            color: #6b8fa8;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        /* ===== EXPLANATION ===== */
+        .explanation-card h3 {
+            color: #4ade80;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .explanation {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #b0c9de;
+        }
+
+        .explanation strong {
+            color: #e2edf8;
+        }
+
+        /* ===== BACK LINK ===== */
+        .back {
+            text-align: center;
+            margin-top: 42px;
+            animation: fadeInUp .6s ease .4s both;
+        }
+
+        .back a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, .2);
+            background: rgba(96, 165, 250, .06);
+            transition: all .3s ease;
+            display: inline-block;
+        }
+
+        .back a:hover {
+            background: rgba(96, 165, 250, .12);
+            border-color: rgba(96, 165, 250, .4);
+            transform: translateX(-4px);
+            box-shadow: 0 6px 20px rgba(96, 165, 250, .12);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .container {
+                margin: 30px auto;
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .score-value {
+                font-size: 34px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-<h1>CW-RAS Dashboard</h1>
-<div class="subtitle">Contextual Water Risk Assessment System</div>
+        <h1>CW-RAS Dashboard</h1>
+        <div class="subtitle">Contextual Water Risk Assessment System</div>
 
-<!-- HEADER -->
-<div class="card header">
-    <div>
-        <div class="location-title">📍 {{ data.panchayat }}</div>
-        <div class="risk-type">{{ data.risk_type }}</div>
-    </div>
+        <!-- HEADER -->
+        <div class="card header">
+            <div>
+                <div class="location-title">📍 {{ data.panchayat }}</div>
+                <div class="risk-type">{{ data.risk_type }}</div>
+            </div>
 
-    <div class="risk-level"
-        style="
-        background:
-        {% if data.level == 'Low' %}#064e3b
-        {% elif data.level == 'Moderate' %}#78350f
-        {% else %}#7f1d1d{% endif %};
-        color:
-        {% if data.level == 'Low' %}#4ade80
-        {% elif data.level == 'Moderate' %}#facc15
-        {% else %}#f87171{% endif %};
-        ">
-        {{ data.level }} Risk
-    </div>
-</div>
-
-<!-- OVERVIEW WITH RAW DATA -->
-<div class="card overview">
-    <div class="overview-item">
-        <h4>🌧 Rainfall Characteristics</h4>
-        <p>
-            Normal: <strong>{{ data.rainfall_normal }} mm</strong><br>
-            Current: <strong>{{ data.rainfall_current }} mm</strong><br>
-            Deviation: <strong>{{ data.rainfall_deviation }} %</strong>
-        </p>
-    </div>
-
-    <div class="overview-item">
-        <h4>💧 Groundwater Trends</h4>
-        <p>
-            Previous: <strong>{{ data.gw_last }} m</strong><br>
-            Current: <strong>{{ data.gw_current }} m</strong><br>
-            Change: <strong>{{ data.gw_change }} m</strong>
-        </p>
-    </div>
-
-    <div class="overview-item">
-        <h4>🌱 Land-use Profile</h4>
-        <p>
-            Urban: <strong>{{ data.urban_percent }} %</strong><br>
-            Forest: <strong>{{ data.forest_percent }} %</strong><br>
-            Type: <strong>{{ data.landuse_type }}</strong>
-        </p>
-    </div>
-</div>
-
-<!-- METRICS (SYMMETRIC) -->
-<div class="card">
-    <div class="metrics">
-        <div class="metric">
-            <h3>Overall Risk Score</h3>
-            <div class="value">{{ data.score }}</div>
+            <div class="risk-level
+        {% if data.level == 'Low' %}risk-low
+        {% elif data.level == 'Moderate' %}risk-moderate
+        {% else %}risk-high{% endif %}">
+                {{ data.level }} Risk
+            </div>
         </div>
 
-        <div class="metric">
-            <h3>Rainfall Impact</h3>
-            <div class="value">{{ data.rainfall }}</div>
-            <div class="bar"><div class="fill rain" style="width: {{ data.rainfall * 10 }}%"></div></div>
+        <!-- OVERVIEW WITH RAW DATA -->
+        <div class="card overview">
+            <div class="overview-item">
+                <h4>🌧 Rainfall Characteristics</h4>
+                <p>
+                    Normal: <strong>{{ data.rainfall_normal }} mm</strong><br>
+                    Current: <strong>{{ data.rainfall_current }} mm</strong><br>
+                    Deviation: <strong>{{ data.rainfall_deviation }} %</strong>
+                </p>
+            </div>
+
+            <div class="overview-item">
+                <h4>💧 Groundwater Trends</h4>
+                <p>
+                    Previous: <strong>{{ data.gw_last }} m</strong><br>
+                    Current: <strong>{{ data.gw_current }} m</strong><br>
+                    Change: <strong>{{ data.gw_change }} m</strong>
+                </p>
+            </div>
+
+            <div class="overview-item">
+                <h4>🌱 Land-use Profile</h4>
+                <p>
+                    Urban: <strong>{{ data.urban_percent }} %</strong><br>
+                    Forest: <strong>{{ data.forest_percent }} %</strong><br>
+                    Type: <strong>{{ data.landuse_type }}</strong>
+                </p>
+            </div>
         </div>
 
-        <div class="metric">
-            <h3>Groundwater Impact</h3>
-            <div class="value">{{ data.groundwater }}</div>
-            <div class="bar"><div class="fill ground" style="width: {{ data.groundwater * 10 }}%"></div></div>
+        <!-- METRICS -->
+        <div class="card">
+            <div class="metrics">
+                <div class="metric">
+                    <h3>Overall Risk Score</h3>
+                    <div class="score-value">{{ data.score }}</div>
+                </div>
+
+                <div class="metric">
+                    <h3>Rainfall Impact</h3>
+                    <div class="value">{{ data.rainfall }}</div>
+                    <div class="bar">
+                        <div class="fill rain" style="width: {{ data.rainfall * 10 }}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <h3>Groundwater Impact</h3>
+                    <div class="value">{{ data.groundwater }}</div>
+                    <div class="bar">
+                        <div class="fill ground" style="width: {{ data.groundwater * 10 }}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric">
+                    <h3>Land-use Impact</h3>
+                    <div class="value">{{ data.landuse }}</div>
+                    <div class="bar">
+                        <div class="fill land" style="width: {{ data.landuse * 10 }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="weights">
+                Weight Distribution: Rainfall (40%), Groundwater (40%), Land-use (20%)
+            </div>
         </div>
 
-        <div class="metric">
-            <h3>Land-use Impact</h3>
-            <div class="value">{{ data.landuse }}</div>
-            <div class="bar"><div class="fill land" style="width: {{ data.landuse * 10 }}%"></div></div>
+        <!-- EXPLANATION -->
+        <div class="card explanation-card">
+            <h3>Assessment Explanation</h3>
+            <p class="explanation">
+                Based on the combined evaluation of rainfall deviation, groundwater fluctuation,
+                and land-use characteristics at the panchayat level, the assessed location exhibits
+                a <strong>{{ data.level|lower }}</strong> water-related risk profile.
+                {{ data.explanation }}
+            </p>
         </div>
+
+        <div class="back">
+            <a href="/">← Assess another location</a>
+        </div>
+
     </div>
-
-    <div class="weights">
-        Weight Distribution: Rainfall (40%), Groundwater (40%), Land-use (20%)
-    </div>
-</div>
-
-<!-- EXPLANATION -->
-<div class="card">
-    <h3>Assessment Explanation</h3>
-    <p class="explanation">
-        Based on the combined evaluation of rainfall deviation, groundwater fluctuation,
-        and land-use characteristics at the panchayat level, the assessed location exhibits
-        a <strong>{{ data.level|lower }}</strong> water-related risk profile.
-        {{ data.explanation }}
-    </p>
-</div>
-
-<div class="back">
-    <a href="/">← Assess another location</a>
-</div>
-
-</div>
 </body>
+
 </html>

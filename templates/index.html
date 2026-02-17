@@ -2,184 +2,331 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CW-RAS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CW-RAS · Contextual Water Risk Assessment</title>
+    <meta name="description" content="CW-RAS — Contextual Water Risk Assessment System for panchayat-level flood and water-scarcity risk evaluation.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            font-family: "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #0b1e2d, #040b12);
-            color: #e8f1f8;
+            font-family: 'Inter', sans-serif;
+            background: #060e18;
+            color: #e2edf8;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ---------- GROUP BUTTON ---------- */
+        /* ===== ANIMATED BACKGROUND ===== */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: .18;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            width: 600px; height: 600px;
+            background: #1e90ff;
+            top: -180px; left: -120px;
+            animation: blobDrift 18s ease-in-out infinite alternate;
+        }
+        body::after {
+            width: 500px; height: 500px;
+            background: #22d3ee;
+            bottom: -160px; right: -100px;
+            animation: blobDrift 22s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes blobDrift {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(60px, 40px) scale(1.12); }
+            100% { transform: translate(-40px, 20px) scale(.95); }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* ===== GROUP BUTTON (top-left) ===== */
         .group-wrapper {
             position: fixed;
             top: 20px;
-            left: 24px;   /* CHANGED: moved to top-left */
+            left: 24px;
             z-index: 100;
         }
-
         .group-btn {
-            padding: 8px 14px;
-            border-radius: 18px;
-            border: none;
+            padding: 9px 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,.12);
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            color: #00141f;
-            background: linear-gradient(to right, #45c7ff, #4ade80);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            background: rgba(255,255,255,.06);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 4px 20px rgba(0,0,0,.35);
+            transition: all .3s ease;
         }
-
+        .group-btn:hover {
+            background: rgba(255,255,255,.12);
+            box-shadow: 0 6px 28px rgba(0,0,0,.5);
+        }
         .group-box {
-            display: none;
-            margin-top: 10px;
-            width: 280px;
-            padding: 18px;
-            border-radius: 18px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),
-                linear-gradient(145deg, rgba(11,33,51,0.95), rgba(8,24,39,0.95));
-            box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: all .35s cubic-bezier(.4,0,.2,1);
+            margin-top: 12px;
+            width: 300px;
+            padding: 22px;
+            border-radius: 20px;
+            background: rgba(10,24,40,.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,.6);
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.75;
         }
-
         .group-box strong {
             color: #4ade80;
+            font-weight: 600;
         }
-
         .group-wrapper:hover .group-box {
-            display: block;
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
-        /* ---------- MAIN CARD ---------- */
+        /* ===== ALGO BUTTON (bottom-right) ===== */
+        .algo-btn {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            padding: 11px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: #7dd3fc;
+            background: rgba(10,24,40,.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(125,211,252,.2);
+            border-radius: 22px;
+            text-decoration: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,.45);
+            z-index: 90;
+            transition: all .3s ease;
+        }
+        .algo-btn:hover {
+            background: rgba(15,38,60,.95);
+            border-color: rgba(125,211,252,.45);
+            box-shadow: 0 8px 35px rgba(30,144,255,.15);
+            transform: translateY(-2px);
+        }
+
+        /* ===== MAIN CARD ===== */
         .card {
+            position: relative;
+            z-index: 1;
             max-width: 720px;
-            margin: 80px auto;
-            padding: 44px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0)),
-                linear-gradient(145deg, rgba(15,38,56,0.9), rgba(10,27,42,0.9));
-            border-radius: 26px;
+            margin: 80px auto 40px;
+            padding: 48px 44px;
+            background: rgba(12,28,46,.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 28px;
             box-shadow:
-                0 28px 60px rgba(0,0,0,0.6),
-                inset 0 1px 0 rgba(255,255,255,0.05);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+                0 32px 64px rgba(0,0,0,.45),
+                inset 0 1px 0 rgba(255,255,255,.05);
+            animation: fadeInUp .7s ease both;
         }
 
+        /* ===== HEADING ===== */
         h1 {
             text-align: center;
-            color: #45c7ff;
-            margin-bottom: 4px;
-            letter-spacing: 1.2px;
-            font-weight: 700;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #60a5fa, #22d3ee, #4ade80);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 6s linear infinite;
+            margin-bottom: 6px;
         }
-
         .subtitle {
             text-align: center;
-            color: #9fbcd3;
+            color: #8eafc8;
             font-size: 14px;
-            margin-bottom: 38px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            letter-spacing: .3px;
         }
 
+        /* ===== OVERVIEW BOX ===== */
         .overview {
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 18px;
-            padding: 24px 28px;
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 20px;
+            padding: 26px 28px;
             margin-bottom: 36px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)),
-                linear-gradient(145deg, rgba(11,33,51,0.85), rgba(8,24,39,0.85));
+            background: rgba(255,255,255,.025);
+            animation: fadeInUp .7s ease .15s both;
         }
-
         .overview h3 {
-            margin: 0 0 16px 0;
+            margin: 0 0 18px 0;
             color: #4ade80;
             font-size: 15px;
+            font-weight: 600;
+            letter-spacing: .4px;
         }
-
         .overview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 12px 26px;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px 28px;
             font-size: 14px;
+            color: #b0c9de;
+        }
+        .overview-grid div {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,.04);
+        }
+        .overview-grid strong {
+            color: #e2edf8;
+            font-weight: 600;
+        }
+
+        /* ===== FORM ===== */
+        form {
+            animation: fadeInUp .7s ease .3s both;
         }
 
         label {
             display: block;
-            margin-top: 22px;
-            font-size: 14px;
-            color: #9fbcd3;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 10px;
-            border-radius: 14px;
-            border: none;
-            font-size: 15px;
+            margin-top: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8eafc8;
+            text-transform: uppercase;
+            letter-spacing: .8px;
         }
 
         input, select {
-            background: rgba(10,27,42,0.75);
-            color: #e8f1f8;
+            width: 100%;
+            padding: 15px 18px;
+            margin-top: 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.08);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            background: rgba(8,20,35,.7);
+            color: #e2edf8;
+            outline: none;
+            transition: all .3s ease;
+        }
+        input:focus, select:focus {
+            border-color: rgba(96,165,250,.5);
+            box-shadow: 0 0 0 3px rgba(96,165,250,.12), 0 0 20px rgba(96,165,250,.08);
+        }
+        input::placeholder {
+            color: #5a7a94;
+        }
+        select option {
+            background: #0c1c2e;
+            color: #e2edf8;
         }
 
-        button {
+        /* ===== SUBMIT BUTTON ===== */
+        .submit-btn {
+            width: 100%;
             margin-top: 36px;
-            background: linear-gradient(to right, #3ec7ff, #2ecc71);
-            color: #00141f;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-size: 15px;
             font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: .5px;
             cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9, #06b6d4);
+            background-size: 200% auto;
+            box-shadow: 0 6px 24px rgba(37,99,235,.3);
+            transition: all .35s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+            transform: translateX(-100%);
+            transition: transform .5s ease;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 36px rgba(37,99,235,.4);
+            background-position: right center;
+        }
+        .submit-btn:hover::after {
+            transform: translateX(100%);
+        }
+        .submit-btn:active {
+            transform: translateY(0) scale(.985);
         }
 
+        /* ===== ERROR ===== */
         .error {
-            margin-top: 20px;
+            margin-top: 22px;
             text-align: center;
             color: #f87171;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(248,113,113,.08);
+            border: 1px solid rgba(248,113,113,.15);
+            animation: fadeInUp .4s ease both;
         }
 
+        /* ===== FOOTER ===== */
         .footer {
             text-align: center;
-            margin-top: 34px;
+            margin-top: 38px;
             font-size: 12px;
-            color: #7fa2bb;
+            color: #5a7a94;
+            letter-spacing: .3px;
         }
 
-        /* ---------- MOBILE EMPTY SPACE FIX ---------- */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            body {
-                min-height: auto;
-            }
-
             .card {
-                margin-bottom: 24px;
+                margin: 60px 16px 32px;
+                padding: 36px 24px;
             }
-        }
-
-        /* ---------- ALGORITHM INFO BUTTON ---------- */
-        .algo-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 10px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #45c7ff;
-            background: rgba(11,33,51,0.9);
-            border: 1px solid rgba(69,199,255,0.4);
-            border-radius: 18px;
-            text-decoration: none;
-            box-shadow: 0 10px 24px rgba(0,0,0,0.5);
-            z-index: 90;
-        }
-
-        .algo-btn:hover {
-            background: rgba(15,38,56,0.95);
+            h1 { font-size: 28px; }
+            .group-wrapper { top: 14px; left: 16px; }
+            .algo-btn { bottom: 18px; right: 18px; font-size: 12px; padding: 9px 16px; }
+            .group-box { width: 260px; }
         }
     </style>
 </head>
@@ -198,14 +345,13 @@
         <strong>Under the guidance of</strong><br>
         SIJIMOL K<br>
         Assistant Professor<br>
-        Department of Computer Science & Engineering<br>
+        Department of Computer Science &amp; Engineering<br>
         College of Engineering, Perumon
     </div>
 </div>
 
-<!-- CHANGED: Flask-safe route -->
 <a href="/algorithm" class="algo-btn">
-    Learn more about our algorithm
+    Learn more about our algorithm →
 </a>
 
 <div class="card">
@@ -216,11 +362,11 @@
         <h3>System Analysis Overview</h3>
         <div class="overview-grid">
             <div><strong>Algorithm:</strong> SR-SA v2</div>
-            <div><strong>Risk Models:</strong> Flood & Scarcity</div>
+            <div><strong>Risk Models:</strong> Flood &amp; Scarcity</div>
             <div><strong>Primary Input:</strong> Panchayat-level Data</div>
             <div><strong>Rainfall:</strong> Deviation Analysis</div>
             <div><strong>Groundwater:</strong> Level Change</div>
-            <div><strong>Land-use:</strong> Urban & Forest Cover</div>
+            <div><strong>Land-use:</strong> Urban &amp; Forest Cover</div>
         </div>
     </div>
 
@@ -234,7 +380,7 @@
             <option value="scarcity">Water Scarcity Risk</option>
         </select>
 
-        <button type="submit">Run Risk Assessment</button>
+        <button type="submit" class="submit-btn">Run Risk Assessment</button>
     </form>
 
     {% if error %}

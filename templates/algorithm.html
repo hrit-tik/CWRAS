@@ -1,320 +1,610 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>SR-SA v2 Algorithm | CW-RAS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SR-SA v2 Algorithm · CW-RAS</title>
+    <meta name="description" content="Technical documentation for the SR-SA v2 algorithm used by CW-RAS.">
 
-<style>
-    body {
-        margin: 0;
-        font-family: "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, #0b1e2d, #040b12);
-        color: #e8f1f8;
-    }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(14px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .container {
-        max-width: 980px;
-        margin: 60px auto;
-        padding: 40px;
-        animation: fadeUp 0.6s ease;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060e18;
+            color: #e2edf8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-    h1 {
-        text-align: center;
-        color: #45c7ff;
-        margin-bottom: 6px;
-        letter-spacing: 1px;
-    }
+        /* ===== BACKGROUND BLOBS ===== */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: .14;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-    .subtitle {
-        text-align: center;
-        font-size: 14px;
-        color: #9fbcd3;
-        margin-bottom: 46px;
-    }
+        body::before {
+            width: 550px;
+            height: 550px;
+            background: #6366f1;
+            top: -160px;
+            right: -100px;
+            animation: blobDrift 22s ease-in-out infinite alternate;
+        }
 
-    .card {
-        background: linear-gradient(145deg, #0f2638, #0a1b2a);
-        border-radius: 22px;
-        padding: 30px;
-        margin-bottom: 28px;
-        box-shadow: 0 18px 45px rgba(0,0,0,0.55);
-    }
+        body::after {
+            width: 480px;
+            height: 480px;
+            background: #0ea5e9;
+            bottom: -140px;
+            left: -80px;
+            animation: blobDrift 19s ease-in-out infinite alternate-reverse;
+        }
 
-    h2 {
-        color: #4ade80;
-        font-size: 18px;
-        margin-bottom: 14px;
-    }
+        @keyframes blobDrift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
 
-    p {
-        font-size: 15px;
-        line-height: 1.7;
-        color: #dce9f3;
-    }
+            50% {
+                transform: translate(40px, 30px) scale(1.08);
+            }
 
-    .equation {
-        margin: 18px 0;
-        padding: 14px 18px;
-        background: rgba(11,33,51,0.85);
-        border-left: 4px solid #45c7ff;
-        border-radius: 12px;
-        font-family: "Consolas", monospace;
-        font-size: 14px;
-        color: #c7e9ff;
-    }
+            100% {
+                transform: translate(-30px, 20px) scale(.95);
+            }
+        }
 
-    .flow {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-        gap: 18px;
-        margin-top: 20px;
-    }
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(22px);
+            }
 
-    .flow-box {
-        background: linear-gradient(145deg, #0b2133, #081827);
-        padding: 18px;
-        border-radius: 16px;
-        text-align: center;
-        font-size: 14px;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-        animation: fadeUp 0.8s ease;
-    }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    .flow-box span {
-        display: block;
-        margin-top: 6px;
-        color: #9fbcd3;
-        font-size: 13px;
-    }
+        @keyframes barFill {
+            from {
+                width: 0;
+            }
+        }
 
-    .back {
-        text-align: center;
-        margin-top: 40px;
-    }
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
 
-    .back a {
-        color: #45c7ff;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-    }
-</style>
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 55px auto;
+            padding: 36px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #22d3ee);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 6s linear infinite;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #8eafc8;
+            font-weight: 500;
+            margin-bottom: 48px;
+            letter-spacing: .3px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: rgba(12, 28, 46, .5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 22px;
+            padding: 32px;
+            margin-bottom: 26px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .4);
+            animation: fadeInUp .6s ease both;
+        }
+
+        .card:nth-of-type(1) {
+            animation-delay: 0s;
+        }
+
+        .card:nth-of-type(2) {
+            animation-delay: .06s;
+        }
+
+        .card:nth-of-type(3) {
+            animation-delay: .12s;
+        }
+
+        .card:nth-of-type(4) {
+            animation-delay: .18s;
+        }
+
+        .card:nth-of-type(5) {
+            animation-delay: .24s;
+        }
+
+        .card:nth-of-type(6) {
+            animation-delay: .30s;
+        }
+
+        .card:nth-of-type(7) {
+            animation-delay: .36s;
+        }
+
+        .card:nth-of-type(8) {
+            animation-delay: .42s;
+        }
+
+        .card:nth-of-type(9) {
+            animation-delay: .48s;
+        }
+
+        .card:nth-of-type(10) {
+            animation-delay: .54s;
+        }
+
+        h2 {
+            color: #4ade80;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: .3px;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #b0c9de;
+        }
+
+        p strong {
+            color: #e2edf8;
+        }
+
+        /* ===== EQUATION BLOCKS ===== */
+        .equation {
+            margin: 20px 0;
+            padding: 16px 22px;
+            background: rgba(255, 255, 255, .03);
+            border-left: 3px solid #60a5fa;
+            border-radius: 0 14px 14px 0;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 14px;
+            color: #c7e9ff;
+            line-height: 1.7;
+            box-shadow: inset 4px 0 16px rgba(96, 165, 250, .06);
+        }
+
+        /* ===== FLOW GRID ===== */
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .flow-box {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+            padding: 22px 18px;
+            border-radius: 18px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+
+        .flow-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .35);
+            border-color: rgba(255, 255, 255, .12);
+        }
+
+        .flow-box span {
+            display: block;
+            margin-top: 8px;
+            color: #8eafc8;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        /* ===== WEIGHT BARS ===== */
+        .weight-bar-container {
+            background: rgba(255, 255, 255, .06);
+            height: 14px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .weight-bar-container>div {
+            height: 100%;
+            transition: width .8s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        .wb-rain {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .wb-land {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        .wb-ground {
+            background: linear-gradient(90deg, #eab308, #facc15);
+        }
+
+        .weight-label {
+            font-size: 13px;
+            color: #6b8fa8;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        /* ===== SAMPLE VALUES ===== */
+        .sample-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .sample-item {
+            text-align: center;
+            padding: 18px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 16px;
+            transition: transform .25s ease;
+        }
+
+        .sample-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .sample-number {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+        }
+
+        .sample-label {
+            font-size: 13px;
+            color: #8eafc8;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .c-blue {
+            color: #60a5fa;
+        }
+
+        .c-teal {
+            color: #22d3ee;
+        }
+
+        .c-green {
+            color: #4ade80;
+        }
+
+        /* ===== KEY CHARACTERISTICS ===== */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            font-size: 15px;
+            color: #b0c9de;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+            flex-shrink: 0;
+        }
+
+        /* ===== BACK LINK ===== */
+        .back {
+            text-align: center;
+            margin-top: 44px;
+            animation: fadeInUp .6s ease .6s both;
+        }
+
+        .back a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, .2);
+            background: rgba(96, 165, 250, .06);
+            transition: all .3s ease;
+            display: inline-block;
+        }
+
+        .back a:hover {
+            background: rgba(96, 165, 250, .12);
+            border-color: rgba(96, 165, 250, .4);
+            transform: translateX(-4px);
+            box-shadow: 0 6px 20px rgba(96, 165, 250, .12);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .container {
+                margin: 30px auto;
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            .sample-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sample-number {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-<h1>SR-SA v2 Algorithm</h1>
-<div class="subtitle">Simplified Risk–Score Aggregation · Contextual Water Risk Assessment</div>
+        <h1>SR-SA v2 Algorithm</h1>
+        <div class="subtitle">Simplified Risk–Score Aggregation · Contextual Water Risk Assessment</div>
 
-<!-- OVERVIEW -->
-<div class="card">
-    <h2>Algorithm Overview</h2>
-    <p>
-        SR-SA v2 (Simplified Risk–Score Aggregation, Version 2) is a deterministic,
-        multi-parameter evaluation algorithm designed to assess water-related risks
-        at the panchayat level. The algorithm integrates hydrological variability
-        and land-use characteristics into a single composite risk score.
-    </p>
-    <p>
-        Instead of relying on prediction models, SR-SA v2 focuses on
-        <strong>observed deviations</strong>, ensuring interpretability,
-        transparency, and academic defensibility.
-    </p>
-</div>
-
-<!-- PARAMETERS -->
-<div class="card">
-    <h2>Input Parameters</h2>
-
-    <div class="flow">
-        <div class="flow-box">
-            🌧 Rainfall
-            <span>Current vs Normal Deviation</span>
-        </div>
-        <div class="flow-box">
-            💧 Groundwater
-            <span>Change in Water Table</span>
-        </div>
-        <div class="flow-box">
-            🌱 Land-use
-            <span>Urban & Forest Cover</span>
-        </div>
-    </div>
-</div>
-
-<!-- RAINFALL -->
-<div class="card">
-    <h2>Rainfall Deviation Calculation</h2>
-    <p>
-        Rainfall impact is computed using the percentage deviation between
-        long-term normal rainfall and the current observed rainfall.
-        This captures abnormal excess or deficit conditions.
-    </p>
-
-    <div class="equation">
-        Rainfall Deviation (%) =
-        | R<sub>normal</sub> − R<sub>current</sub> |
-        / R<sub>normal</sub> × 100
-    </div>
-
-    <p>
-        This normalized representation allows rainfall variability
-        to be compared uniformly across regions.
-    </p>
-</div>
-
-<!-- GROUNDWATER -->
-<div class="card">
-    <h2>Groundwater Fluctuation Assessment</h2>
-    <p>
-        Groundwater stress is evaluated using the absolute change
-        between previous and current groundwater levels.
-    </p>
-
-    <div class="equation">
-        Groundwater Change =
-        | GW<sub>last</sub> − GW<sub>current</sub> |
-    </div>
-
-    <p>
-        Larger fluctuations indicate increased vulnerability,
-        particularly in water scarcity scenarios.
-    </p>
-</div>
-
-<!-- LAND USE -->
-<div class="card">
-    <h2>Land-use Influence</h2>
-    <p>
-        Land-use characteristics affect both surface runoff and
-        groundwater recharge. Urban areas tend to increase runoff,
-        while forest cover improves infiltration.
-    </p>
-
-    <div class="equation">
-        Land-use Score = Urban% − ( Forest% × 0.5 )
-    </div>
-</div>
-
-<!-- RISK AGGREGATION -->
-<div class="card">
-    <h2>Risk Score Aggregation</h2>
-    <p>
-        SR-SA v2 uses weighted aggregation, where parameter importance
-        varies depending on the selected risk model.
-    </p>
-
-    <div class="equation">
-        Flood Risk Score =
-        0.4 × Rainfall +
-        0.4 × Land-use +
-        0.2 × Groundwater
-    </div>
-
-    <div class="equation">
-        Water Scarcity Risk Score =
-        0.4 × Rainfall +
-        0.4 × Groundwater +
-        0.2 × Land-use
-    </div>
-</div>
-
-
-<!-- WEIGHT DISTRIBUTION -->
-<div class="card">
-    <h2>Weight Distribution Visualization</h2>
-
-    <p><strong>Flood Model</strong></p>
-    <div style="background:#1a3449;height:16px;border-radius:10px;overflow:hidden;margin-bottom:8px;">
-        <div style="width:40%;background:#45c7ff;height:100%;float:left;"></div>
-        <div style="width:40%;background:#4ade80;height:100%;float:left;"></div>
-        <div style="width:20%;background:#facc15;height:100%;float:left;"></div>
-    </div>
-    <p style="font-size:13px;color:#9fbcd3;">Rainfall 40% · Land-use 40% · Groundwater 20%</p>
-
-    <br>
-
-    <p><strong>Water Scarcity Model</strong></p>
-    <div style="background:#1a3449;height:16px;border-radius:10px;overflow:hidden;margin-bottom:8px;">
-        <div style="width:40%;background:#45c7ff;height:100%;float:left;"></div>
-        <div style="width:40%;background:#facc15;height:100%;float:left;"></div>
-        <div style="width:20%;background:#4ade80;height:100%;float:left;"></div>
-    </div>
-    <p style="font-size:13px;color:#9fbcd3;">Rainfall 40% · Groundwater 40% · Land-use 20%</p>
-</div>
-
-
-<!-- CLASSIFICATION -->
-<div class="card">
-    <h2>Risk Level Classification</h2>
-    <p>
-        The final composite score is mapped to qualitative
-        risk levels to support interpretability.
-    </p>
-
-    <div class="equation">
-        Score &lt; 15 → Low Risk<br>
-        15 ≤ Score &lt; 25 → Moderate Risk<br>
-        Score ≥ 25 → High Risk
-    </div>
-</div>
-
-<!-- SAMPLE CALCULATION BREAKDOWN -->
-<div class="card">
-    <h2>Sample Score Breakdown</h2>
-
-    <p>Example Input Values:</p>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:16px;">
-        <div style="text-align:center;">
-            <div style="font-size:26px;color:#45c7ff;">18%</div>
-            <div style="font-size:13px;color:#9fbcd3;">Rainfall Deviation</div>
+        <!-- OVERVIEW -->
+        <div class="card">
+            <h2>Algorithm Overview</h2>
+            <p>
+                SR-SA v2 (Simplified Risk–Score Aggregation, Version 2) is a deterministic,
+                multi-parameter evaluation algorithm designed to assess water-related risks
+                at the panchayat level. The algorithm integrates hydrological variability
+                and land-use characteristics into a single composite risk score.
+            </p>
+            <p style="margin-top:14px;">
+                Instead of relying on prediction models, SR-SA v2 focuses on
+                <strong>observed deviations</strong>, ensuring interpretability,
+                transparency, and academic defensibility.
+            </p>
         </div>
 
-        <div style="text-align:center;">
-            <div style="font-size:26px;color:#72efdd;">5</div>
-            <div style="font-size:13px;color:#9fbcd3;">Groundwater Change</div>
+        <!-- PARAMETERS -->
+        <div class="card">
+            <h2>Input Parameters</h2>
+            <div class="flow">
+                <div class="flow-box">
+                    🌧 Rainfall
+                    <span>Current vs Normal Deviation</span>
+                </div>
+                <div class="flow-box">
+                    💧 Groundwater
+                    <span>Change in Water Table</span>
+                </div>
+                <div class="flow-box">
+                    🌱 Land-use
+                    <span>Urban &amp; Forest Cover</span>
+                </div>
+            </div>
         </div>
 
-        <div style="text-align:center;">
-            <div style="font-size:26px;color:#80ed99;">22</div>
-            <div style="font-size:13px;color:#9fbcd3;">Land-use Score</div>
+        <!-- RAINFALL -->
+        <div class="card">
+            <h2>Rainfall Deviation Calculation</h2>
+            <p>
+                Rainfall impact is computed using the percentage deviation between
+                long-term normal rainfall and the current observed rainfall.
+                This captures abnormal excess or deficit conditions.
+            </p>
+            <div class="equation">
+                Rainfall Deviation (%) =
+                | R<sub>normal</sub> − R<sub>current</sub> |
+                / R<sub>normal</sub> × 100
+            </div>
+            <p>
+                This normalized representation allows rainfall variability
+                to be compared uniformly across regions.
+            </p>
         </div>
+
+        <!-- GROUNDWATER -->
+        <div class="card">
+            <h2>Groundwater Fluctuation Assessment</h2>
+            <p>
+                Groundwater stress is evaluated using the absolute change
+                between previous and current groundwater levels.
+            </p>
+            <div class="equation">
+                Groundwater Change =
+                | GW<sub>last</sub> − GW<sub>current</sub> |
+            </div>
+            <p>
+                Larger fluctuations indicate increased vulnerability,
+                particularly in water scarcity scenarios.
+            </p>
+        </div>
+
+        <!-- LAND USE -->
+        <div class="card">
+            <h2>Land-use Influence</h2>
+            <p>
+                Land-use characteristics affect both surface runoff and
+                groundwater recharge. Urban areas tend to increase runoff,
+                while forest cover improves infiltration.
+            </p>
+            <div class="equation">
+                Land-use Score = Urban% − ( Forest% × 0.5 )
+            </div>
+        </div>
+
+        <!-- RISK AGGREGATION -->
+        <div class="card">
+            <h2>Risk Score Aggregation</h2>
+            <p>
+                SR-SA v2 uses weighted aggregation, where parameter importance
+                varies depending on the selected risk model.
+            </p>
+            <div class="equation">
+                Flood Risk Score =
+                0.4 × Rainfall +
+                0.4 × Land-use +
+                0.2 × Groundwater
+            </div>
+            <div class="equation">
+                Water Scarcity Risk Score =
+                0.4 × Rainfall +
+                0.4 × Groundwater +
+                0.2 × Land-use
+            </div>
+        </div>
+
+        <!-- WEIGHT DISTRIBUTION -->
+        <div class="card">
+            <h2>Weight Distribution Visualization</h2>
+
+            <p style="margin-bottom:12px;"><strong>Flood Model</strong></p>
+            <div class="weight-bar-container">
+                <div class="wb-rain" style="width:40%"></div>
+                <div class="wb-land" style="width:40%"></div>
+                <div class="wb-ground" style="width:20%"></div>
+            </div>
+            <div class="weight-label">Rainfall 40% · Land-use 40% · Groundwater 20%</div>
+
+            <p style="margin-bottom:12px;"><strong>Water Scarcity Model</strong></p>
+            <div class="weight-bar-container">
+                <div class="wb-rain" style="width:40%"></div>
+                <div class="wb-ground" style="width:40%"></div>
+                <div class="wb-land" style="width:20%"></div>
+            </div>
+            <div class="weight-label">Rainfall 40% · Groundwater 40% · Land-use 20%</div>
+        </div>
+
+        <!-- CLASSIFICATION -->
+        <div class="card">
+            <h2>Risk Level Classification</h2>
+            <p>
+                The final composite score is mapped to qualitative
+                risk levels to support interpretability.
+            </p>
+            <div class="equation">
+                Score &lt; 15 → Low Risk<br>
+                15 ≤ Score &lt; 25 → Moderate Risk<br>
+                Score ≥ 25 → High Risk
+            </div>
+        </div>
+
+        <!-- SAMPLE CALCULATION -->
+        <div class="card">
+            <h2>Sample Score Breakdown</h2>
+            <p>Example Input Values:</p>
+
+            <div class="sample-grid">
+                <div class="sample-item">
+                    <div class="sample-number c-blue">18%</div>
+                    <div class="sample-label">Rainfall Deviation</div>
+                </div>
+                <div class="sample-item">
+                    <div class="sample-number c-teal">5</div>
+                    <div class="sample-label">Groundwater Change</div>
+                </div>
+                <div class="sample-item">
+                    <div class="sample-number c-green">22</div>
+                    <div class="sample-label">Land-use Score</div>
+                </div>
+            </div>
+
+            <p style="margin-top:22px;">
+                Flood Risk Score =
+                (0.4 × 18) + (0.4 × 22) + (0.2 × 5)
+            </p>
+            <div class="equation">
+                = 7.2 + 8.8 + 1.0 = 17.0 → Moderate Risk
+            </div>
+        </div>
+
+        <!-- CONCLUSION -->
+        <div class="card">
+            <h2>Key Characteristics of SR-SA v2</h2>
+            <ul class="feature-list">
+                <li><span class="feature-dot"></span> Transparent scoring logic</li>
+                <li><span class="feature-dot"></span> Context-aware parameter weighting</li>
+                <li><span class="feature-dot"></span> Computationally lightweight</li>
+                <li><span class="feature-dot"></span> Scaled down version of the vast scope of the project</li>
+            </ul>
+        </div>
+
+        <div class="back">
+            <a href="/">← Back to Risk Assessment</a>
+        </div>
+
     </div>
-
-    <p style="margin-top:20px;">
-        Flood Risk Score =
-        (0.4 × 18) + (0.4 × 22) + (0.2 × 5)
-    </p>
-
-    <div class="equation">
-        = 7.2 + 8.8 + 1.0 = 17.0 → Moderate Risk
-    </div>
-</div>
-
-<!-- CONCLUSION -->
-<div class="card">
-    <h2>Key Characteristics of SR-SA v2</h2>
-    <p>
-        • Transparent scoring logic<br>
-        • Context-aware parameter weighting<br>
-        • Computationally lightweight<br>
-        • Scaled down version of the vast scope of the project.
-    </p>
-</div>
-
-<div class="back">
-    <a href="/">← Back to Risk Assessment</a>
-</div>
-
-</div>
 </body>
+
 </html>
