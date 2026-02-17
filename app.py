@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import pandas as pd
+import numpy as np
 import requests
 import math
 
@@ -44,12 +45,16 @@ def get_lat_long(place_name):
 
 # ---------- Haversine Distance ----------
 def haversine_distance(lat1, lon1, lat2, lon2):
-    R = 6371
+    R = 6371  # Earth radius in km
+
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+
     dlat = lat2 - lat1
     dlon = lon2 - lon1
+
     a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
     c = 2 * math.asin(math.sqrt(a))
+
     return R * c
 
 
@@ -78,6 +83,7 @@ def index():
     if request.method == "GET":
         return render_template("index.html")
 
+    # ---------- POST LOGIC ----------
     user_place = request.form["panchayat"]
     risk_type = request.form["risk_type"]
 
@@ -87,28 +93,27 @@ def index():
         return render_template("index.html", error="Location not found. Please try another name.")
 
     nearest_panchayat = find_nearest_panchayat(lat, lon)
+
     row = risk_data[risk_data["Panchayat"] == nearest_panchayat].iloc[0]
 
-    # ----- RAINFALL DEVIATION (original stable logic) -----
+    # ----- RAINFALL DEVIATION -----
     rainfall_dev = abs(row["R_normal"] - row["R_current"]) / row["R_normal"] * 100
-    rainfall_dev = min(rainfall_dev, 60)
 
     rainfall_normal = round(row["R_normal"], 2)
     rainfall_current = round(row["R_current"], 2)
     rainfall_deviation = round(rainfall_dev, 2)
 
-    # ----- GROUNDWATER (direction fixed but stable behavior retained) -----
+    # ----- GROUNDWATER DEVIATION -----
     if pd.notna(row["GW_last"]) and pd.notna(row["GW_current"]):
-        gw_drop = row["GW_last"] - row["GW_current"]
-        gw_dev = abs(gw_drop) * 10
+        gw_dev = abs(row["GW_last"] - row["GW_current"]) * 10
     else:
         gw_dev = 0
 
     gw_last = round(row["GW_last"], 2) if pd.notna(row["GW_last"]) else None
     gw_current = round(row["GW_current"], 2) if pd.notna(row["GW_current"]) else None
-    gw_change = round(abs(gw_last - gw_current), 2) if gw_last and gw_current else None
+    gw_change = round(abs(gw_last - gw_current), 2) if gw_last is not None and gw_current is not None else None
 
-    # ----- LAND USE (original formula restored) -----
+    # ----- LAND USE -----
     urban = row["Urban_Percent"] if pd.notna(row["Urban_Percent"]) else 0
     forest = row["Forest_Percent"] if pd.notna(row["Forest_Percent"]) else 0
     landuse_score = urban - (forest * 0.5)
@@ -123,26 +128,21 @@ def index():
     else:
         landuse_type = "Rural / Forest-dominant"
 
-    # ----- FINAL SCORING (original weights preserved) -----
     if risk_type == "flood":
         score = (0.4 * rainfall_dev) + (0.4 * landuse_score) + (0.2 * gw_dev)
         risk_label = "Flood Risk"
 
-        rainfall_component = 0.4 * rainfall_dev
-        groundwater_component = 0.2 * gw_dev
-        landuse_component = 0.4 * landuse_score
+        rainfall = round(0.4 * score, 2)
+        groundwater = round(0.2 * score, 2)
+        landuse = round(0.4 * score, 2)
 
     else:
         score = (0.4 * rainfall_dev) + (0.4 * gw_dev) + (0.2 * landuse_score)
         risk_label = "Water Scarcity Risk"
 
-        rainfall_component = 0.4 * rainfall_dev
-        groundwater_component = 0.4 * gw_dev
-        landuse_component = 0.2 * landuse_score
-
-    rainfall = round(rainfall_component, 2)
-    groundwater = round(groundwater_component, 2)
-    landuse = round(landuse_component, 2)
+        rainfall = round(0.4 * score, 2)
+        groundwater = round(0.4 * score, 2)
+        landuse = round(0.2 * score, 2)
 
     level = classify_level(score)
 
@@ -184,6 +184,7 @@ def index():
     )
 
 
+# ---------- NEW ROUTE (DOCUMENTATION ONLY) ----------
 @app.route("/algorithm")
 def algorithm():
     return render_template("algorithm.html")

@@ -1,105 +1,84 @@
+import ee
 import pandas as pd
-import osmnx as ox
-import geopandas as gpd
-from shapely.geometry import Point
 
-# -----------------------------
-# SETTINGS
-# -----------------------------
-BUFFER_RADIUS = 3000  # meters
-OUTPUT_FILE = "CW_RAS_master_dataset_updated.csv"
+# Initialize Earth Engine
+ee.Initialize(project="cwras-landuse")
 
-print("Loading datasets...")
-
+# Load local files
 locations = pd.read_csv("panchayat_locations.csv")
 master = pd.read_csv("CW_RAS_master_dataset.csv")
 
-locations = locations.dropna(subset=["Latitude", "Longitude"])
+# Load ESA WorldCover 2020 (10m resolution)
+landcover = ee.Image("ESA/WorldCover/v100/2020")
 
-tags = {
-    "landuse": True,
-    "natural": True
-}
+def get_landcover_percent(lat, lon, radius=5000):
+    point = ee.Geometry.Point(lon, lat)
+    region = point.buffer(radius)
 
-print("Processing panchayats...")
+    stats = landcover.reduceRegion(
+        reducer=ee.Reducer.frequencyHistogram(),
+        geometry=region,
+        scale=10,
+        maxPixels=1e9
+    ).getInfo()
 
-for index, row in locations.iterrows():
+    if not stats or "Map" not in stats:
+        print("No data found, using safe defaults.")
+        return 5.0, 80.0  # fallback values
 
-    name = row["Panchayat"]
-    lat = row["Latitude"]
-    lon = row["Longitude"]
+    histogram = stats["Map"]
 
-    print(f"Processing {name}...")
+    # Convert keys to integers (important safety step)
+    histogram = {int(k): v for k, v in histogram.items()}
 
-    try:
-        # Fetch features within 3km
-        gdf = ox.features_from_point((lat, lon), tags=tags, dist=BUFFER_RADIUS)
+    total = sum(histogram.values())
 
-        if gdf.empty:
-            urban_percent = 0
-            forest_percent = 0
-        else:
-            # Keep only polygons
-            gdf = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])]
+    # ESA WorldCover Classes
+    # 10 = Tree cover
+    # 20 = Shrubland
+    # 30 = Grassland
+    # 40 = Cropland
+    # 50 = Built-up
+    # 95 = Mangroves
 
-            if gdf.empty:
-                urban_percent = 0
-                forest_percent = 0
-            else:
-                # Project to meters
-                gdf = gdf.to_crs(epsg=3857)
+    urban_pixels = histogram.get(50, 0)
 
-                # Create buffer
-                point = gpd.GeoDataFrame(
-                    geometry=[Point(lon, lat)],
-                    crs="EPSG:4326"
-                ).to_crs(epsg=3857)
+    vegetation_pixels = (
+        histogram.get(10, 0) +   # Tree cover
+        histogram.get(20, 0) +   # Shrubland
+        histogram.get(30, 0) +   # Grassland
+        histogram.get(40, 0) +   # Cropland
+        histogram.get(95, 0)     # Mangroves
+    )
 
-                buffer = point.buffer(BUFFER_RADIUS).iloc[0]
-                buffer_area = buffer.area
+    urban_percent = (urban_pixels / total) * 100
+    vegetation_percent = (vegetation_pixels / total) * 100
 
-                # Clip geometries manually (faster than overlay)
-                gdf["clipped"] = gdf.geometry.intersection(buffer)
-                gdf["area"] = gdf["clipped"].area
+    return round(urban_percent, 2), round(vegetation_percent, 2)
 
-                # -------------------------
-                # URBAN DETECTION
-                # -------------------------
-                urban_types = [
-                    "residential",
-                    "commercial",
-                    "industrial",
-                    "retail",
-                    "construction"
-                ]
 
-                urban = gdf[gdf["landuse"].isin(urban_types)]
-                urban_area = urban["area"].sum()
+for _, row in locations.iterrows():
+    print("Processing:", row["Panchayat"])
 
-                # -------------------------
-                # FOREST DETECTION
-                # -------------------------
-                forest = gdf[
-                    (gdf["landuse"] == "forest") |
-                    (gdf["natural"] == "wood") |
-                    (gdf["natural"] == "scrub")
-                ]
+    urban, forest = get_landcover_percent(
+        row["Latitude"],
+        row["Longitude"],
+        radius=5000
+    )
 
-                forest_area = forest["area"].sum()
+    print(f"Urban: {urban}% | Vegetation: {forest}%")
 
-                urban_percent = (urban_area / buffer_area) * 100
-                forest_percent = (forest_area / buffer_area) * 100
+    master.loc[
+        master["Panchayat"] == row["Panchayat"],
+        "Urban_Percent"
+    ] = urban
 
-        master.loc[master["Panchayat"] == name, "Urban_Percent"] = round(urban_percent, 2)
-        master.loc[master["Panchayat"] == name, "Forest_Percent"] = round(forest_percent, 2)
+    master.loc[
+        master["Panchayat"] == row["Panchayat"],
+        "Forest_Percent"
+    ] = forest
 
-    except Exception as e:
-        print(f"Error processing {name}: {e}")
-        master.loc[master["Panchayat"] == name, "Urban_Percent"] = 0
-        master.loc[master["Panchayat"] == name, "Forest_Percent"] = 0
+# Save updated dataset
+master.to_csv("CW_RAS_master_dataset_updated.csv", index=False)
 
-print("Saving updated dataset...")
-
-master.to_csv(OUTPUT_FILE, index=False)
-
-print("✅ Land-use update completed successfully.")
+print("Done. Updated dataset saved.")
