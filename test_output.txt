@@ -1,0 +1,49 @@
+﻿python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python 
+test_scoring.py 2>&1 
+| Out-File -FilePath 
+test_output.txt -Enc 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Traceba   
+ ck (most recent     
+call last)::Stri    
+ng) [], RemoteEx    
+ception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  File "C:\Users\asus
+\Desktop\CWRAS\test_s
+coring.py", line 
+244, in <module>
+    print(f"\u2705 
+PASS: {name}")
+    ~~~~~^^^^^^^^^^^^
+^^^^^^^^
+  File "C:\Python313\
+Lib\encodings\cp1252.
+py", line 19, in 
+encode
+    return codecs.cha
+rmap_encode(input,sel
+f.errors,encoding_tab
+le)[0]
+           ~~~~~~~~~~
+~~~~~~~~~~~^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^
+UnicodeEncodeError: 
+'charmap' codec 
+can't encode 
+character '\u2705' 
+in position 0: 
+character maps to 
+<undefined>
