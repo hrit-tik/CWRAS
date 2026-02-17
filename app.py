@@ -121,12 +121,23 @@ def index():
     user_place = request.form["panchayat"]
     risk_type = request.form["risk_type"]
 
-    lat, lon = get_lat_long(user_place)
+    # --- STEP 1: Try exact name match (case-insensitive) ---
+    name_lower = user_place.strip().lower()
+    exact_match = risk_data[risk_data["Panchayat"].str.lower().str.strip("* ") == name_lower]
+    if exact_match.empty:
+        # Also try with asterisk-stripped names
+        exact_match = risk_data[risk_data["Panchayat"].str.replace("*", "", regex=False).str.lower().str.strip() == name_lower]
 
-    if lat is None or lon is None:
-        return render_template("index.html", error="Location not found. Please try another name.")
+    if not exact_match.empty:
+        nearest_panchayat = exact_match.iloc[0]["Panchayat"]
+    else:
+        # --- STEP 2: Fall back to geocoding + Haversine ---
+        lat, lon = get_lat_long(user_place)
 
-    nearest_panchayat = find_nearest_panchayat(lat, lon)
+        if lat is None or lon is None:
+            return render_template("index.html", error="Location not found. Please try another name.")
+
+        nearest_panchayat = find_nearest_panchayat(lat, lon)
 
     row = risk_data[risk_data["Panchayat"] == nearest_panchayat].iloc[0]
 
