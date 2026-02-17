@@ -44,6 +44,13 @@ def normalize_landuse(urban_pct, forest_pct):
     return min(urban_component + forest_deficit, 100)
 
 
+def compute_swf(water_body_pct):
+    """Surface Water Factor: moderates scarcity for lake-adjacent areas."""
+    if pd.isna(water_body_pct) or water_body_pct <= 0:
+        return 1.0
+    return max(1.0 - (water_body_pct / 100) * 0.8, 0.2)
+
+
 # -----------------------------
 # STEP 1: COMPUTE NORMALIZED SCORES
 # -----------------------------
@@ -74,12 +81,14 @@ df["FloodRisk"] = (
     0.2 * df["G_score"]
 )
 
-# Scarcity: 0.4×Rainfall + 0.4×Groundwater + 0.2×Land-use
+# Scarcity: 0.4*Rainfall + 0.4*Groundwater + 0.2*Land-use, moderated by SWF
+df["SWF"] = df["Water_Body_Percent"].apply(compute_swf) if "Water_Body_Percent" in df.columns else 1.0
+
 df["ScarcityRisk"] = (
     0.4 * df["R_score"] +
     0.4 * df["G_score"] +
     0.2 * df["L_score"]
-)
+) * df["SWF"]
 
 # -----------------------------
 # STEP 3: CLASSIFICATION
@@ -103,7 +112,7 @@ df["ScarcityRiskLevel"] = df["ScarcityRisk"].apply(classify_risk)
 
 output_columns = [
     "Panchayat",
-    "R_score", "G_score", "L_score",
+    "R_score", "G_score", "L_score", "SWF",
     "FloodRisk", "FloodRiskLevel",
     "ScarcityRisk", "ScarcityRiskLevel"
 ]

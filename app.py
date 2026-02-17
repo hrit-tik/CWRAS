@@ -47,6 +47,15 @@ def normalize_landuse(urban_pct, forest_pct):
     return min(urban_component + forest_deficit, 100)
 
 
+def compute_swf(water_body_pct):
+    """Surface Water Factor: moderates scarcity for lake-adjacent areas.
+    SWF = 1 - (Water_Body_Percent / 100) * 0.8
+    Range: [0.2, 1.0]. Applied only to scarcity, not flood."""
+    if pd.isna(water_body_pct) or water_body_pct <= 0:
+        return 1.0
+    return max(1.0 - (water_body_pct / 100) * 0.8, 0.2)
+
+
 # ---------- OSM Geocoding ----------
 def get_lat_long(place_name):
     url = "https://nominatim.openstreetmap.org/search"
@@ -150,7 +159,11 @@ def index():
     else:
         landuse_type = "Rural / Forest-dominant"
 
-    # ----- WEIGHTED SCORING (correct per-component impacts) -----
+    # ----- SURFACE WATER FACTOR -----
+    water_body_pct = row["Water_Body_Percent"] if "Water_Body_Percent" in row.index else 0
+    swf = compute_swf(water_body_pct)
+
+    # ----- WEIGHTED SCORING -----
     if risk_type == "flood":
         rainfall_impact = 0.4 * rain_score
         landuse_impact = 0.4 * lu_score
@@ -161,7 +174,8 @@ def index():
         rainfall_impact = 0.4 * rain_score
         groundwater_impact = 0.4 * gw_score
         landuse_impact = 0.2 * lu_score
-        score = rainfall_impact + groundwater_impact + landuse_impact
+        raw_score = rainfall_impact + groundwater_impact + landuse_impact
+        score = raw_score * swf  # Surface water moderation
         risk_label = "Water Scarcity Risk"
 
     rainfall = round(rainfall_impact, 2)
@@ -197,7 +211,10 @@ def index():
 
         "urban_percent": urban_percent,
         "forest_percent": forest_percent,
-        "landuse_type": landuse_type
+        "landuse_type": landuse_type,
+
+        "water_body_pct": round(water_body_pct, 1) if water_body_pct else 0,
+        "swf": round(swf, 2)
     }
 
     return render_template(

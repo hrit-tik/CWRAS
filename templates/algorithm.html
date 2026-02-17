@@ -527,11 +527,32 @@
                 0.2 × Groundwater
             </div>
             <div class="equation">
-                Water Scarcity Risk Score =
-                0.4 × Rainfall +
+                Water Scarcity Risk Score =<br>
+                ( 0.4 × Rainfall +
                 0.4 × Groundwater +
-                0.2 × Land-use
+                0.2 × Land-use ) × SWF
             </div>
+        </div>
+
+        <!-- SURFACE WATER FACTOR -->
+        <div class="card">
+            <h2>Surface Water Moderation Factor</h2>
+            <p>
+                Panchayats adjacent to significant water bodies (lakes,
+                backwaters, reservoirs) have reduced water scarcity risk.
+                The Surface Water Factor (SWF) moderates scarcity scores
+                while leaving flood risk unchanged.
+            </p>
+            <div class="equation">
+                SWF = 1 − ( Water_Body% / 100 ) × 0.8<br>
+                Range: [ 0.2, 1.0 ]
+            </div>
+            <p>
+                A panchayat with no water body proximity (0%) has SWF = 1.0
+                (unaffected). One with 35% water body coverage has SWF = 0.72,
+                reducing scarcity by 28%. The floor of 0.2 ensures even
+                fully aquatic areas retain minimal scarcity sensitivity.
+            </p>
         </div>
 
         <!-- WEIGHT DISTRIBUTION -->
