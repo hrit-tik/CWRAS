@@ -14,12 +14,37 @@ panchayat_list = sorted(risk_data["Panchayat"].unique().tolist())
 
 
 def classify_level(score):
-    if score < 15:
+    if score < 30:
         return "Low"
-    elif score < 25:
+    elif score < 60:
         return "Moderate"
     else:
         return "High"
+
+
+def normalize_rainfall(r_normal, r_current):
+    """Rainfall deviation normalized to 0-100, capped at 100."""
+    if r_normal == 0:
+        return 0
+    dev = abs(r_normal - r_current) / r_normal * 100
+    return min(dev, 100)
+
+
+def normalize_groundwater(gw_last, gw_current):
+    """Groundwater change normalized to 0-100 using 3m reference max."""
+    MAX_GW_CHANGE = 3.0
+    if pd.isna(gw_last) or pd.isna(gw_current):
+        return 0
+    change = abs(gw_last - gw_current)
+    score = (change / MAX_GW_CHANGE) * 100
+    return min(score, 100)
+
+
+def normalize_landuse(urban_pct, forest_pct):
+    """Land-use score normalized to 0-100. Higher = more runoff-prone."""
+    urban_component = (urban_pct / 100) * 50
+    forest_deficit = ((100 - forest_pct) / 100) * 50
+    return min(urban_component + forest_deficit, 100)
 
 
 # ---------- OSM Geocoding ----------
@@ -96,18 +121,15 @@ def index():
 
     row = risk_data[risk_data["Panchayat"] == nearest_panchayat].iloc[0]
 
-    # ----- RAINFALL DEVIATION -----
-    rainfall_dev = abs(row["R_normal"] - row["R_current"]) / row["R_normal"] * 100
+    # ----- NORMALIZE COMPONENTS (all 0-100) -----
+    rain_score = normalize_rainfall(row["R_normal"], row["R_current"])
 
     rainfall_normal = round(row["R_normal"], 2)
     rainfall_current = round(row["R_current"], 2)
-    rainfall_deviation = round(rainfall_dev, 2)
+    rainfall_deviation = round(rain_score, 2)
 
-    # ----- GROUNDWATER DEVIATION -----
-    if pd.notna(row["GW_last"]) and pd.notna(row["GW_current"]):
-        gw_dev = abs(row["GW_last"] - row["GW_current"]) * 10
-    else:
-        gw_dev = 0
+    # ----- GROUNDWATER -----
+    gw_score = normalize_groundwater(row["GW_last"], row["GW_current"])
 
     gw_last = round(row["GW_last"], 2) if pd.notna(row["GW_last"]) else None
     gw_current = round(row["GW_current"], 2) if pd.notna(row["GW_current"]) else None
@@ -116,7 +138,7 @@ def index():
     # ----- LAND USE -----
     urban = row["Urban_Percent"] if pd.notna(row["Urban_Percent"]) else 0
     forest = row["Forest_Percent"] if pd.notna(row["Forest_Percent"]) else 0
-    landuse_score = urban - (forest * 0.5)
+    lu_score = normalize_landuse(urban, forest)
 
     urban_percent = round(urban, 2)
     forest_percent = round(forest, 2)
@@ -128,21 +150,23 @@ def index():
     else:
         landuse_type = "Rural / Forest-dominant"
 
+    # ----- WEIGHTED SCORING (correct per-component impacts) -----
     if risk_type == "flood":
-        score = (0.4 * rainfall_dev) + (0.4 * landuse_score) + (0.2 * gw_dev)
+        rainfall_impact = 0.4 * rain_score
+        landuse_impact = 0.4 * lu_score
+        groundwater_impact = 0.2 * gw_score
+        score = rainfall_impact + landuse_impact + groundwater_impact
         risk_label = "Flood Risk"
-
-        rainfall = round(0.4 * score, 2)
-        groundwater = round(0.2 * score, 2)
-        landuse = round(0.4 * score, 2)
-
     else:
-        score = (0.4 * rainfall_dev) + (0.4 * gw_dev) + (0.2 * landuse_score)
+        rainfall_impact = 0.4 * rain_score
+        groundwater_impact = 0.4 * gw_score
+        landuse_impact = 0.2 * lu_score
+        score = rainfall_impact + groundwater_impact + landuse_impact
         risk_label = "Water Scarcity Risk"
 
-        rainfall = round(0.4 * score, 2)
-        groundwater = round(0.4 * score, 2)
-        landuse = round(0.2 * score, 2)
+    rainfall = round(rainfall_impact, 2)
+    groundwater = round(groundwater_impact, 2)
+    landuse = round(landuse_impact, 2)
 
     level = classify_level(score)
 

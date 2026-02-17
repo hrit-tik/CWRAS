@@ -14,122 +14,103 @@ df["GW_last"] = df["GW_last"].fillna(df["GW_current"])
 df["GW_current"] = df["GW_current"].fillna(df["GW_last"])
 df = df.fillna(0)
 
-# -----------------------------
-# STEP 1: RAINFALL ANALYSIS
-# -----------------------------
-df["rain_diff"] = (df["R_current"] - df["R_normal"]) / df["R_normal"]
 
-# Flood: excess rainfall only
-df["R_score_flood"] = np.where(
-    df["rain_diff"] > 0,
-    df["rain_diff"] * 100,
-    0
+# -----------------------------
+# NORMALIZATION FUNCTIONS (0-100)
+# -----------------------------
+
+def normalize_rainfall(r_normal, r_current):
+    """Rainfall deviation normalized to 0-100, capped at 100."""
+    if r_normal == 0:
+        return 0
+    dev = abs(r_normal - r_current) / r_normal * 100
+    return min(dev, 100)
+
+
+def normalize_groundwater(gw_last, gw_current):
+    """Groundwater change normalized to 0-100 using 3m reference max."""
+    MAX_GW_CHANGE = 3.0
+    if pd.isna(gw_last) or pd.isna(gw_current):
+        return 0
+    change = abs(gw_last - gw_current)
+    score = (change / MAX_GW_CHANGE) * 100
+    return min(score, 100)
+
+
+def normalize_landuse(urban_pct, forest_pct):
+    """Land-use score normalized to 0-100. Higher = more runoff-prone."""
+    urban_component = (urban_pct / 100) * 50
+    forest_deficit = ((100 - forest_pct) / 100) * 50
+    return min(urban_component + forest_deficit, 100)
+
+
+# -----------------------------
+# STEP 1: COMPUTE NORMALIZED SCORES
+# -----------------------------
+
+df["R_score"] = df.apply(
+    lambda row: normalize_rainfall(row["R_normal"], row["R_current"]),
+    axis=1
 )
 
-# Scarcity: deficit rainfall only
-df["R_score_scarcity"] = np.where(
-    df["rain_diff"] < 0,
-    (-df["rain_diff"]) * 100,
-    0
+df["G_score"] = df.apply(
+    lambda row: normalize_groundwater(row["GW_last"], row["GW_current"]),
+    axis=1
 )
 
-# Prevent extreme dominance
-df["R_score_flood"] = df["R_score_flood"].clip(0, 60)
-df["R_score_scarcity"] = df["R_score_scarcity"].clip(0, 60)
-
-# -----------------------------
-# STEP 2: GROUNDWATER ANALYSIS
-# -----------------------------
-
-# Correct drop direction
-df["gw_drop"] = df["GW_last"] - df["GW_current"]
-
-# Ignore small seasonal fluctuations (<0.4m)
-df["gw_drop"] = df["gw_drop"].apply(lambda x: 0 if x < 0.4 else x)
-
-# Robust scaling using 90th percentile
-MAX_EXPECTED_GW_DROP = df["gw_drop"].quantile(0.90)
-MAX_EXPECTED_GW_DROP = MAX_EXPECTED_GW_DROP if MAX_EXPECTED_GW_DROP > 0 else 1
-
-df["G_score"] = (df["gw_drop"] / MAX_EXPECTED_GW_DROP) * 100
-df["G_score"] = df["G_score"].clip(0, 100)
-
-# -----------------------------
-# STEP 3: LAND-USE ANALYSIS
-# -----------------------------
-
-# Flood: normalized impervious contribution
-df["L_score_flood"] = (df["Urban_Percent"] / 100) * 50
-
-# Scarcity: recharge deficit model
-df["L_score_scarcity"] = (
-    (df["Urban_Percent"] * 0.6) +
-    ((100 - df["Forest_Percent"]) * 0.4)
+df["L_score"] = df.apply(
+    lambda row: normalize_landuse(row["Urban_Percent"], row["Forest_Percent"]),
+    axis=1
 )
 
-df["L_score_scarcity"] = df["L_score_scarcity"].clip(0, 100)
-
 # -----------------------------
-# STEP 4: BASE RISK SCORES
+# STEP 2: WEIGHTED RISK SCORES
 # -----------------------------
 
+# Flood:    0.4×Rainfall + 0.4×Land-use + 0.2×Groundwater
 df["FloodRisk"] = (
-    0.45 * df["R_score_flood"] +
-    0.35 * df["L_score_flood"] +
-    0.20 * df["G_score"]
+    0.4 * df["R_score"] +
+    0.4 * df["L_score"] +
+    0.2 * df["G_score"]
 )
 
+# Scarcity: 0.4×Rainfall + 0.4×Groundwater + 0.2×Land-use
 df["ScarcityRisk"] = (
-    0.35 * df["R_score_scarcity"] +
-    0.35 * df["G_score"] +
-    0.30 * df["L_score_scarcity"]
+    0.4 * df["R_score"] +
+    0.4 * df["G_score"] +
+    0.2 * df["L_score"]
 )
 
 # -----------------------------
-# STEP 5: RECHARGE BUFFER LOGIC
-# -----------------------------
-# Reduce scarcity for rural / forest-dominant recharge zones
-
-def apply_recharge_buffer(row):
-    if row["Urban_Percent"] < 30 and row["Forest_Percent"] > 20:
-        return row["ScarcityRisk"] * 0.75
-    return row["ScarcityRisk"]
-
-df["ScarcityRisk"] = df.apply(apply_recharge_buffer, axis=1)
-
-# Prevent scarcity from exceeding flood unrealistically
-df["ScarcityRisk"] = np.minimum(df["ScarcityRisk"], df["FloodRisk"] * 1.1)
-
-# -----------------------------
-# STEP 6: CLASSIFICATION
+# STEP 3: CLASSIFICATION
 # -----------------------------
 
 def classify_risk(score):
-    if score <= 25:
+    if score < 30:
         return "Low"
-    elif score <= 50:
-        return "Medium"
-    elif score <= 75:
-        return "High"
+    elif score < 60:
+        return "Moderate"
     else:
-        return "Critical"
+        return "High"
+
 
 df["FloodRiskLevel"] = df["FloodRisk"].apply(classify_risk)
 df["ScarcityRiskLevel"] = df["ScarcityRisk"].apply(classify_risk)
 
 # -----------------------------
-# SAVE OUTPUT (UNCHANGED FORMAT)
+# SAVE OUTPUT
 # -----------------------------
 
 output_columns = [
     "Panchayat",
+    "R_score", "G_score", "L_score",
     "FloodRisk", "FloodRiskLevel",
     "ScarcityRisk", "ScarcityRiskLevel"
 ]
 
 df[output_columns].to_csv("CW_RAS_output_results.csv", index=False)
 
-print("✅ Calibrated CW-RAS risk calculation completed successfully.")
+print("✅ CW-RAS risk calculation completed successfully.")
 print("📁 Output saved as CW_RAS_output_results.csv")
 
 # -----------------------------

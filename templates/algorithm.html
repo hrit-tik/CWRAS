@@ -479,15 +479,17 @@
             <h2>Groundwater Fluctuation Assessment</h2>
             <p>
                 Groundwater stress is evaluated using the absolute change
-                between previous and current groundwater levels.
+                between previous and current groundwater levels,
+                normalized against a 3m reference maximum.
             </p>
             <div class="equation">
-                Groundwater Change =
-                | GW<sub>last</sub> − GW<sub>current</sub> |
+                Groundwater Score =
+                min( | GW<sub>last</sub> − GW<sub>current</sub> |
+                / 3.0 × 100, 100 )
             </div>
             <p>
-                Larger fluctuations indicate increased vulnerability,
-                particularly in water scarcity scenarios.
+                Result is scaled to 0–100. Larger fluctuations indicate
+                increased vulnerability, particularly in water scarcity scenarios.
             </p>
         </div>
 
@@ -496,12 +498,19 @@
             <h2>Land-use Influence</h2>
             <p>
                 Land-use characteristics affect both surface runoff and
-                groundwater recharge. Urban areas tend to increase runoff,
-                while forest cover improves infiltration.
+                groundwater recharge. Urban areas increase runoff,
+                while forest cover improves infiltration. Both factors
+                contribute equally to the land-use risk score.
             </p>
             <div class="equation">
-                Land-use Score = Urban% − ( Forest% × 0.5 )
+                Urban Component = ( Urban% / 100 ) × 50<br>
+                Forest Deficit = ( (100 − Forest%) / 100 ) × 50<br>
+                Land-use Score = min( Urban + Forest Deficit, 100 )
             </div>
+            <p>
+                Result is always 0–100. A fully urbanized, deforested
+                area scores 100; a fully forested rural area scores ~0.
+            </p>
         </div>
 
         <!-- RISK AGGREGATION -->
@@ -550,42 +559,42 @@
         <div class="card">
             <h2>Risk Level Classification</h2>
             <p>
-                The final composite score is mapped to qualitative
+                The final composite score (0–100) is mapped to qualitative
                 risk levels to support interpretability.
             </p>
             <div class="equation">
-                Score &lt; 15 → Low Risk<br>
-                15 ≤ Score &lt; 25 → Moderate Risk<br>
-                Score ≥ 25 → High Risk
+                Score &lt; 30 → Low Risk<br>
+                30 ≤ Score &lt; 60 → Moderate Risk<br>
+                Score ≥ 60 → High Risk
             </div>
         </div>
 
         <!-- SAMPLE CALCULATION -->
         <div class="card">
             <h2>Sample Score Breakdown</h2>
-            <p>Example Input Values:</p>
+            <p>Example: Rainfall Dev = 20%, GW change = 1.5m, Urban = 25%, Forest = 30%</p>
 
             <div class="sample-grid">
                 <div class="sample-item">
-                    <div class="sample-number c-blue">18%</div>
-                    <div class="sample-label">Rainfall Deviation</div>
+                    <div class="sample-number c-blue">20</div>
+                    <div class="sample-label">Rainfall Score</div>
                 </div>
                 <div class="sample-item">
-                    <div class="sample-number c-teal">5</div>
-                    <div class="sample-label">Groundwater Change</div>
+                    <div class="sample-number c-teal">50</div>
+                    <div class="sample-label">Groundwater Score</div>
                 </div>
                 <div class="sample-item">
-                    <div class="sample-number c-green">22</div>
+                    <div class="sample-number c-green">47.5</div>
                     <div class="sample-label">Land-use Score</div>
                 </div>
             </div>
 
             <p style="margin-top:22px;">
-                Flood Risk Score =
-                (0.4 × 18) + (0.4 × 22) + (0.2 × 5)
+                Flood Risk =
+                (0.4 × 20) + (0.4 × 47.5) + (0.2 × 50)
             </p>
             <div class="equation">
-                = 7.2 + 8.8 + 1.0 = 17.0 → Moderate Risk
+                = 8.0 + 19.0 + 10.0 = 37.0 → Moderate Risk
             </div>
         </div>
 
