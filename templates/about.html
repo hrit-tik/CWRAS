@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About · CW-RAS</title>
+    <meta name="description"
+        content="Learn about the Contextual Water Risk Assessment System — data sources, algorithm, and team.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060e18;
+            color: #e2edf8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== BACKGROUND BLOBS ===== */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: .14;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::before {
+            width: 550px;
+            height: 550px;
+            background: #1e90ff;
+            top: -160px;
+            left: -100px;
+            animation: blobDrift 20s ease-in-out infinite alternate;
+        }
+
+        body::after {
+            width: 480px;
+            height: 480px;
+            background: #22d3ee;
+            bottom: -140px;
+            right: -80px;
+            animation: blobDrift 24s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes blobDrift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(50px, 35px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-35px, 20px) scale(.95);
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(22px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 960px;
+            margin: 55px auto;
+            padding: 36px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            background: linear-gradient(135deg, #60a5fa, #22d3ee, #4ade80);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 6s linear infinite;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #8eafc8;
+            font-weight: 500;
+            margin-bottom: 48px;
+            letter-spacing: .3px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: rgba(12, 28, 46, .5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 22px;
+            padding: 32px;
+            margin-bottom: 26px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .4);
+            animation: fadeInUp .6s ease both;
+        }
+
+        .card:nth-of-type(1) {
+            animation-delay: 0s;
+        }
+
+        .card:nth-of-type(2) {
+            animation-delay: .06s;
+        }
+
+        .card:nth-of-type(3) {
+            animation-delay: .12s;
+        }
+
+        .card:nth-of-type(4) {
+            animation-delay: .18s;
+        }
+
+        h2 {
+            color: #4ade80;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: .3px;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #b0c9de;
+        }
+
+        p strong {
+            color: #e2edf8;
+        }
+
+        /* ===== HIGHLIGHT BLOCKS ===== */
+        .highlight {
+            margin: 20px 0;
+            padding: 16px 22px;
+            background: rgba(255, 255, 255, .03);
+            border-left: 3px solid #60a5fa;
+            border-radius: 0 14px 14px 0;
+            font-size: 14px;
+            color: #c7e9ff;
+            line-height: 1.7;
+            box-shadow: inset 4px 0 16px rgba(96, 165, 250, .06);
+        }
+
+        /* ===== DATA SOURCE GRID ===== */
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .source-box {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+            padding: 24px 20px;
+            border-radius: 18px;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+
+        .source-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .35);
+            border-color: rgba(255, 255, 255, .12);
+        }
+
+        .source-box .source-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .source-box h3 {
+            color: #e2edf8;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .source-box p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #8eafc8;
+        }
+
+        /* ===== ALGORITHM SUMMARY ===== */
+        .algo-points {
+            list-style: none;
+            padding: 0;
+            margin-top: 16px;
+        }
+
+        .algo-points li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            font-size: 15px;
+            color: #b0c9de;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .algo-points li:last-child {
+            border-bottom: none;
+        }
+
+        .algo-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4ade80;
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
+        .algo-points li strong {
+            color: #e2edf8;
+        }
+
+        /* ===== TEAM GRID ===== */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .team-card {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+            padding: 26px 20px;
+            border-radius: 18px;
+            text-align: center;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, .35);
+            border-color: rgba(255, 255, 255, .12);
+        }
+
+        .team-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .avatar-1 {
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        }
+
+        .avatar-2 {
+            background: linear-gradient(135deg, #22c55e, #14b8a6);
+        }
+
+        .avatar-3 {
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+        }
+
+        .avatar-4 {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .team-card h3 {
+            color: #e2edf8;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .team-card .team-prn {
+            font-size: 12px;
+            color: #5a7a94;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .team-card .team-role {
+            font-size: 13px;
+            color: #8eafc8;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* ===== GUIDE SECTION ===== */
+        .guide-box {
+            margin-top: 16px;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, .025);
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 16px;
+        }
+
+        .guide-box h3 {
+            color: #e2edf8;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .guide-box p {
+            font-size: 13px;
+            color: #8eafc8;
+            line-height: 1.7;
+        }
+
+        /* ===== BACK LINK ===== */
+        .back {
+            text-align: center;
+            margin-top: 44px;
+            animation: fadeInUp .6s ease .3s both;
+        }
+
+        .back a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, .2);
+            background: rgba(96, 165, 250, .06);
+            transition: all .3s ease;
+            display: inline-block;
+        }
+
+        .back a:hover {
+            background: rgba(96, 165, 250, .12);
+            border-color: rgba(96, 165, 250, .4);
+            transform: translateX(-4px);
+            box-shadow: 0 6px 20px rgba(96, 165, 250, .12);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .container {
+                margin: 30px auto;
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            .team-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .source-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>About CW-RAS</h1>
+        <div class="subtitle">Contextual Water Risk Assessment System · Kollam District, Kerala</div>
+
+        <!-- SYSTEM DESCRIPTION -->
+        <div class="card">
+            <h2>System Description</h2>
+            <p>
+                <strong>CW-RAS</strong> (Contextual Water Risk Assessment System) is a panchayat-level
+                environmental risk evaluation tool designed for <strong>Kollam District, Kerala</strong>.
+                It assesses two critical water-related risks — <strong>flood</strong> and
+                <strong>water scarcity</strong> — by analyzing real-world hydrological, geological,
+                and land-use data for each panchayat.
+            </p>
+            <p style="margin-top:14px;">
+                The system accepts a location name or panchayat, geocodes it if necessary using
+                OpenStreetMap, matches it to the nearest panchayat in the dataset, and computes
+                a composite risk score (0–100) along with a qualitative risk level
+                (Low / Moderate / High).
+            </p>
+            <div class="highlight">
+                CW-RAS covers <strong>74 regions</strong> across Kollam District,
+                with each region record containing rainfall, groundwater,
+                land-use, and water body coverage data.
+            </div>
+        </div>
+
+        <!-- DATA SOURCES -->
+        <div class="card">
+            <h2>Data Sources</h2>
+            <p>
+                CW-RAS relies on authoritative, publicly available environmental datasets
+                to ensure scientific validity and reproducibility.
+            </p>
+            <div class="source-grid">
+                <div class="source-box">
+                    <div class="source-icon">🌧</div>
+                    <h3>WRIS Kerala</h3>
+                    <p>
+                        Water Resources Information System — provides long-term normal rainfall
+                        and current observed rainfall data at the panchayat level.
+                        Used for rainfall deviation analysis.
+                    </p>
+                </div>
+                <div class="source-box">
+                    <div class="source-icon">💧</div>
+                    <h3>CGWB</h3>
+                    <p>
+                        Central Ground Water Board — supplies groundwater level measurements
+                        (meters below ground level) for monitoring wells across Kerala.
+                        Used for groundwater fluctuation assessment.
+                    </p>
+                </div>
+                <div class="source-box">
+                    <div class="source-icon">🛰</div>
+                    <h3>Land-use Data</h3>
+                    <p>
+                        Urban coverage and forest cover percentages derived from
+                        satellite-based land-use classification data, used to assess
+                        surface runoff and infiltration characteristics.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALGORITHM SUMMARY -->
+        <div class="card">
+            <h2>Algorithm Summary — SR-SA v2</h2>
+            <p>
+                CW-RAS uses the <strong>SR-SA v2</strong> (Simplified Risk–Score Aggregation, Version 2)
+                algorithm — a deterministic, weighted scoring model that converts raw environmental
+                observations into a single composite risk score.
+            </p>
+            <ul class="algo-points">
+                <li>
+                    <span class="algo-dot"></span>
+                    <div>
+                        <strong>Rainfall Deviation:</strong> Computes the percentage deviation between
+                        long-term normal and current observed rainfall. Higher deviation → higher risk.
+                    </div>
+                </li>
+                <li>
+                    <span class="algo-dot"></span>
+                    <div>
+                        <strong>Groundwater Fluctuation:</strong> Measures the absolute change in
+                        groundwater depth (mbgl), normalized against a 3m reference maximum.
+                        For flood risk, only rising water levels contribute.
+                    </div>
+                </li>
+                <li>
+                    <span class="algo-dot"></span>
+                    <div>
+                        <strong>Land-use Parameters:</strong> Combines urban coverage and forest deficit
+                        into a single score. More urbanization and less forest cover → higher runoff risk.
+                    </div>
+                </li>
+                <li>
+                    <span class="algo-dot"></span>
+                    <div>
+                        <strong>Weighted Scoring Model:</strong> Parameters are weighted differently
+                        for flood (40% rain, 40% land-use, 20% GW) vs. scarcity
+                        (40% rain, 40% GW, 20% land-use). A Surface Water Factor (SWF) further
+                        moderates scarcity in lake-adjacent areas.
+                    </div>
+                </li>
+                <li>
+                    <span class="algo-dot"></span>
+                    <div>
+                        <strong>Risk Classification:</strong> The final score (0–100) is mapped to
+                        Low (&lt;30), Moderate (30–59), or High (≥60) risk levels.
+                    </div>
+                </li>
+            </ul>
+            <div class="highlight">
+                For a detailed technical breakdown with equations and sample calculations,
+                visit the <a href="/algorithm" style="color:#60a5fa; text-decoration:none; font-weight:600;">Algorithm
+                    Documentation →</a>
+            </div>
+        </div>
+
+        <!-- TEAM -->
+        <div class="card">
+            <h2>Team</h2>
+            <p>CW-RAS is developed as a Mini Project by Group 5.</p>
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-avatar avatar-1">HK</div>
+                    <h3>Hritik Krishna</h3>
+                    <div class="team-prn">PRN23CS071</div>
+                    <div class="team-role">Flask &amp; Backend Integration· About System Page</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar avatar-2">NM</div>
+                    <h3>Nandu M V</h3>
+                    <div class="team-prn">PRN23CS099</div>
+                    <div class="team-role">SWF · Flood &amp; Drought Risk Calculation · Result Page</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar avatar-3">SS</div>
+                    <h3>Sruthi S</h3>
+                    <div class="team-prn">PRN23CS121</div>
+                    <div class="team-role">OSM API Geocoding &amp; Location Fetch · Algorithm Page</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar avatar-4">IJ</div>
+                    <h3>Ivan John Benny</h3>
+                    <div class="team-prn">PRN23CS074</div>
+                    <div class="team-role">Rainfall Deviation · Groundwater Score · Land-use · Landing Page</div>
+                </div>
+            </div>
+
+            <div class="guide-box">
+                <h3>Under the guidance of</h3>
+                <p>
+                    <strong>Siji Mol K</strong> · Assistant Professor<br>
+                    Department of Computer Science &amp; Engineering<br>
+                    College of Engineering, Perumon
+                </p>
+            </div>
+        </div>
+
+        <div class="back">
+            <a href="/">← Back to Risk Assessment</a>
+        </div>
+
+    </div>
+</body>
+
+</html>

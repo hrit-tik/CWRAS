@@ -24,7 +24,7 @@ def get_landcover_percent(lat, lon, radius=5000):
 
     if not stats or "Map" not in stats:
         print("No data found, using safe defaults.")
-        return 5.0, 80.0  # fallback values
+        return 5.0, 80.0, 0.0  # fallback values
 
     histogram = stats["Map"]
 
@@ -39,6 +39,7 @@ def get_landcover_percent(lat, lon, radius=5000):
     # 30 = Grassland
     # 40 = Cropland
     # 50 = Built-up
+    # 80 = Permanent water bodies
     # 95 = Mangroves
 
     urban_pixels = histogram.get(50, 0)
@@ -51,22 +52,25 @@ def get_landcover_percent(lat, lon, radius=5000):
         histogram.get(95, 0)     # Mangroves
     )
 
+    water_pixels = histogram.get(80, 0)  # Permanent water bodies
+
     urban_percent = (urban_pixels / total) * 100
     vegetation_percent = (vegetation_pixels / total) * 100
+    water_percent = (water_pixels / total) * 100
 
-    return round(urban_percent, 2), round(vegetation_percent, 2)
+    return round(urban_percent, 2), round(vegetation_percent, 2), round(water_percent, 2)
 
 
 for _, row in locations.iterrows():
     print("Processing:", row["Panchayat"])
 
-    urban, forest = get_landcover_percent(
+    urban, forest, water = get_landcover_percent(
         row["Latitude"],
         row["Longitude"],
         radius=5000
     )
 
-    print(f"Urban: {urban}% | Vegetation: {forest}%")
+    print(f"Urban: {urban}% | Vegetation: {forest}% | Water Body: {water}%")
 
     master.loc[
         master["Panchayat"] == row["Panchayat"],
@@ -78,7 +82,12 @@ for _, row in locations.iterrows():
         "Forest_Percent"
     ] = forest
 
+    master.loc[
+        master["Panchayat"] == row["Panchayat"],
+        "Water_Body_Percent"
+    ] = water
+
 # Save updated dataset
 master.to_csv("CW_RAS_master_dataset_updated.csv", index=False)
 
-print("Done. Updated dataset saved.")
+print("Done. Updated dataset saved with Urban, Forest, and Water Body percentages.")

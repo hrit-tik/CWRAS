@@ -114,31 +114,52 @@
             transform: translateY(0);
         }
 
-        /* ===== ALGO BUTTON (bottom-right) ===== */
-        .algo-btn {
+        /* ===== NAV BUTTONS (bottom-right stack) ===== */
+        .nav-buttons {
             position: fixed;
             bottom: 28px;
             right: 28px;
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .nav-btn {
             padding: 11px 20px;
             font-size: 13px;
             font-weight: 600;
             font-family: 'Inter', sans-serif;
-            color: #7dd3fc;
-            background: rgba(10,24,40,.85);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(125,211,252,.2);
             border-radius: 22px;
             text-decoration: none;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             box-shadow: 0 8px 30px rgba(0,0,0,.45);
-            z-index: 90;
             transition: all .3s ease;
+            display: inline-block;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+        .about-btn {
+            color: #4ade80;
+            background: rgba(10,24,40,.85);
+            border: 1px solid rgba(74,222,128,.2);
+        }
+        .about-btn:hover {
+            background: rgba(15,38,60,.95);
+            border-color: rgba(74,222,128,.45);
+            box-shadow: 0 8px 35px rgba(74,222,128,.15);
+        }
+        .algo-btn {
+            color: #7dd3fc;
+            background: rgba(10,24,40,.85);
+            border: 1px solid rgba(125,211,252,.2);
         }
         .algo-btn:hover {
             background: rgba(15,38,60,.95);
             border-color: rgba(125,211,252,.45);
             box-shadow: 0 8px 35px rgba(30,144,255,.15);
-            transform: translateY(-2px);
         }
 
         /* ===== MAIN CARD ===== */
@@ -325,7 +346,8 @@
             }
             h1 { font-size: 28px; }
             .group-wrapper { top: 14px; left: 16px; }
-            .algo-btn { bottom: 18px; right: 18px; font-size: 12px; padding: 9px 16px; }
+            .nav-buttons { bottom: 18px; right: 18px; }
+            .nav-btn { font-size: 12px; padding: 9px 16px; }
             .group-box { width: 260px; }
         }
     </style>
@@ -343,16 +365,21 @@
         Ivan John Benny (PRN23CS074)
         <br><br>
         <strong>Under the guidance of</strong><br>
-        SIJIMOL K<br>
+        <strong>Siji Mol K</strong><br>
         Assistant Professor<br>
         Department of Computer Science &amp; Engineering<br>
         College of Engineering, Perumon
     </div>
 </div>
 
-<a href="/algorithm" class="algo-btn">
-    Learn more about our algorithm →
-</a>
+<div class="nav-buttons">
+    <a href="/about" class="nav-btn about-btn">
+        About CW-RAS ℹ
+    </a>
+    <a href="/algorithm" class="nav-btn algo-btn">
+        Learn more about our algorithm →
+    </a>
+</div>
 
 <div class="card">
     <h1>CW-RAS</h1>

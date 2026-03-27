@@ -256,7 +256,13 @@ def index():
     )
 
 
-# ---------- NEW ROUTE (DOCUMENTATION ONLY) ----------
+# ---------- ABOUT PAGE ----------
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+# ---------- ALGORITHM DOCUMENTATION ----------
 @app.route("/algorithm")
 def algorithm():
     return render_template("algorithm.html")
