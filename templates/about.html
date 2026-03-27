@@ -291,28 +291,9 @@
             height: 56px;
             border-radius: 50%;
             margin: 0 auto 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        .avatar-1 {
-            background: linear-gradient(135deg, #2563eb, #0ea5e9);
-        }
-
-        .avatar-2 {
-            background: linear-gradient(135deg, #22c55e, #14b8a6);
-        }
-
-        .avatar-3 {
-            background: linear-gradient(135deg, #a855f7, #6366f1);
-        }
-
-        .avatar-4 {
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, .12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
         }
 
         .team-card h3 {
@@ -546,25 +527,25 @@
             <p>CW-RAS is developed as a Mini Project by Group 5.</p>
             <div class="team-grid">
                 <div class="team-card">
-                    <div class="team-avatar avatar-1">HK</div>
+                    <img class="team-avatar" src="{{ url_for('static', filename='team/Hritik.jpg') }}" alt="Hritik Krishna">
                     <h3>Hritik Krishna</h3>
                     <div class="team-prn">PRN23CS071</div>
                     <div class="team-role">Flask Backend Architecture · System Integration · About System Page</div>
                 </div>
                 <div class="team-card">
-                    <div class="team-avatar avatar-2">NM</div>
+                    <img class="team-avatar" src="{{ url_for('static', filename='team/Nandu.jpg') }}" alt="Nandu M V">
                     <h3>Nandu M V</h3>
                     <div class="team-prn">PRN23CS099</div>
                     <div class="team-role">SWF · Flood &amp; Drought Risk Calculation · Result Page</div>
                 </div>
                 <div class="team-card">
-                    <div class="team-avatar avatar-3">SS</div>
+                    <img class="team-avatar" src="{{ url_for('static', filename='team/Sruthi.jpeg') }}" alt="Sruthi S">
                     <h3>Sruthi S</h3>
                     <div class="team-prn">PRN23CS121</div>
                     <div class="team-role">OSM API Geocoding &amp; Location Fetch · Algorithm Page</div>
                 </div>
                 <div class="team-card">
-                    <div class="team-avatar avatar-4">IJ</div>
+                    <img class="team-avatar" src="{{ url_for('static', filename='team/Benny.jpg') }}" alt="Ivan John Benny">
                     <h3>Ivan John Benny</h3>
                     <div class="team-prn">PRN23CS074</div>
                     <div class="team-role">Rainfall Deviation · Groundwater Score · Land-use · Landing Page</div>
